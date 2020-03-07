@@ -1,0 +1,10 @@
+if BOARD_LOCKET
+
+config BOARD
+	default "locket"
+
+config UART_1
+	default y
+	depends on UART_CONSOLE
+
+endif # BOARD_LOCKET

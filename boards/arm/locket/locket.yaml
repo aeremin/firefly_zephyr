@@ -1,0 +1,17 @@
+identifier: locket
+name: OstrannaLocket
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 80
+flash: 512
+supported:
+  - arduino_gpio
+  - arduino_i2c
+  - eeprom
+  - gpio
+  - i2c
+  - uart
+  - watchdog

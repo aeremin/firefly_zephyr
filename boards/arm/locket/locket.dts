@@ -1,0 +1,60 @@
+/dts-v1/;
+#include <mem.h>
+#include <st/l1/stm32l151.dtsi>
+
+/ {
+	model = "Ostranna Locket";
+	compatible = "st,stm32l151";
+
+	chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,uart-mcumgr = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		gdo0: gdo0 {
+			gpios = <&gpioa 3 (GPIO_PULL_DOWN)>;
+			label = "CC1101 GD0";
+		};
+	};
+
+	aliases {
+		cc1101-spi = &spi1;
+		cc1101-gdo0 = &gdo0;
+	};
+
+	sram0: memory@20000000 {
+		reg = <0x20000000 DT_SIZE_K(10)>;
+	};
+
+	soc {
+		flash-controller@40023c00 {
+			flash0: flash@8000000 {
+				reg = <0x08000000 DT_SIZE_K(64)>;
+			};
+		};
+	};
+};
+
+&usart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+// CC1101
+&spi1 {
+	// cs-gpios = <&gpioa 4 0>;
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+&rcc {
+	status = "okay";
+};

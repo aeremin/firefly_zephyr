@@ -40,14 +40,14 @@ void Cc1101::Init() {
   SetTxPower(CC_PwrMinus30dBm);
   SetChannel(0);
 
-	auto ret = gpio_pin_configure(gpio_device, gd_pin, DT_ALIAS_CC1101_GDO0_GPIOS_FLAGS | GPIO_INPUT);
-	if (ret != 0) LOG_ERR("Failed to configure button pin: %d", ret);
+	//auto ret = gpio_pin_configure(gpio_device, gd_pin, DT_ALIAS_CC1101_GDO0_GPIOS_FLAGS | GPIO_INPUT);
+	//if (ret != 0) LOG_ERR("Failed to configure button pin: %d", ret);
 
-	ret = gpio_pin_interrupt_configure(gpio_device, gd_pin, GPIO_INT_EDGE_FALLING);
-	if (ret != 0) LOG_ERR("Failed to configure interrupt on pin: %d", ret);
+	//ret = gpio_pin_interrupt_configure(gpio_device, gd_pin, GPIO_INT_EDGE_FALLING);
+	//if (ret != 0) LOG_ERR("Failed to configure interrupt on pin: %d", ret);
 
-	gpio_init_callback(&gdo0_callback_data_, Gdo0Callback, BIT(gd_pin));
-	gpio_add_callback(gpio_device, &gdo0_callback_data_);
+	//gpio_init_callback(&gdo0_callback_data_, Gdo0Callback, BIT(gd_pin));
+	//gpio_add_callback(gpio_device, &gdo0_callback_data_);
 }
 
 void Cc1101::Gdo0Callback(struct device *dev, struct gpio_callback *cb, u32_t pins)

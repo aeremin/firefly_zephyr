@@ -4,6 +4,7 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Cortex Debug",
       "cwd": "${workspaceRoot}",
@@ -12,7 +13,7 @@
       "type": "cortex-debug",
       "servertype": "external",
       // JLinkDebugServer default port. Debug server should be started separately.
-      "gdbTarget": "localhost:2331"
+      "gdbTarget": "localhost:3333"
     }
   ]
 }

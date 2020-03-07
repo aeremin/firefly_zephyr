@@ -1,0 +1,3 @@
+config BOARD_LOCKET
+	bool "Ostranna Locket"
+	depends on SOC_STM32L151XB

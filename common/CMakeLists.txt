@@ -10,20 +10,27 @@ function(custom_library library_name sources)
   add_dependencies(${library_name} offsets_h)
 endfunction()
 
-custom_library(cc1101 cc1101.cpp)
+if(CONFIG_SPI)
+  custom_library(cc1101 cc1101.cpp)
+endif()
+
 custom_library(color color.cpp)
 
 custom_library(timer timer.cpp)
 target_link_libraries(timer PRIVATE kernel)
 
-custom_library(battery battery.cpp)
+if(CONFIG_ADC)
+  custom_library(battery battery.cpp)
+endif()
 
 if(CONFIG_BT)
   custom_library(bluetooth bluetooth.cpp)
 endif()
 
-custom_library(buzzer buzzer.cpp)
-target_link_libraries(buzzer PRIVATE timer)
+if(CONFIG_PWM)
+  custom_library(buzzer buzzer.cpp)
+  target_link_libraries(buzzer PRIVATE timer)
 
-custom_library(rgb_led rgb_led.cpp)
-target_link_libraries(rgb_led PRIVATE color timer)
+  custom_library(rgb_led rgb_led.cpp)
+  target_link_libraries(rgb_led PRIVATE color timer)
+endif()
