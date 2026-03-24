@@ -34,37 +34,37 @@ jobs:
       - name: Validate Zephyr environment
         run: west manifest --validate
       - run: source ./third_party/pigweed/activate.sh && west build firmware/lock_test --pristine --board lock_v01 && mv ./build/zephyr/zephyr.elf lock_test.elf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: lock_test.elf
           path: lock_test.elf
       - run: source ./third_party/pigweed/activate.sh && west build firmware/lock --pristine --board lock_v01 && mv ./build/zephyr/zephyr.hex lock.hex
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: lock.hex
           path: lock.hex
       - run: source ./third_party/pigweed/activate.sh && west build firmware/firefly --pristine && mv ./build/zephyr/zephyr.elf firefly.elf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: firefly.elf
           path: firefly.elf
       - run: source ./third_party/pigweed/activate.sh && west build firmware/activator --pristine && mv ./build/zephyr/zephyr.elf activator.elf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: activator.elf
           path: activator.elf
       - run: source ./third_party/pigweed/activate.sh && west build firmware/smoke_test --pristine --board firefly_v1 && mv ./build/zephyr/zephyr.elf smoke_test_firefly.elf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: smoke_test_firefly.elf
           path: smoke_test_firefly.elf
       - run: source ./third_party/pigweed/activate.sh && west build firmware/power_meter --pristine --board power_meter && mv ./build/zephyr/zephyr.elf power_meter.elf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: power_meter.elf
           path: power_meter.elf
       - run: source ./third_party/pigweed/activate.sh && west build firmware/rothult_cordyceps --pristine --board cordyceps && mv ./build/zephyr/zephyr.elf rothult_cordyceps.elf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         with:
           name: rothult_cordyceps.elf
           path: rothult_cordyceps.elf
@@ -79,7 +79,7 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: smoke_test_firefly.elf
       - run: stty -F /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034-if02 115200
@@ -88,7 +88,7 @@ jobs:
       - run: sleep 10
       - run: cat log.txt
       - run: cat log.txt | grep "All tests passed!"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: lock_test.elf
       - run: stty -F /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233-if02 115200
