@@ -152,41 +152,41 @@ TEST(Header2Test, NoShortCircuit) {
 }
 
 TEST(ThreadTest, Detach) {
-  static pw::thread::zephyr::StaticContextWithStack<512> thread_context;
-  pw::thread::Thread(pw::thread::zephyr::Options(thread_context), []() {
+  static pw::thread::backend::NativeContextWithStack<512> thread_context;
+  pw::thread::Thread(pw::thread::backend::GetNativeOptions(thread_context, {}), []() {
     pw::this_thread::sleep_for(SystemClock::for_at_least(1s));
     PW_LOG_INFO("ThreadTest_Detach");
   }).detach();
 }
 
 TEST(ThreadTest, Join) {
-  static pw::thread::zephyr::StaticContextWithStack<512> thread_context;
-  pw::thread::Thread(pw::thread::zephyr::Options(thread_context), []() {
+  static pw::thread::backend::NativeContextWithStack<512> thread_context;
+  pw::thread::Thread(pw::thread::backend::GetNativeOptions(thread_context, {}), []() {
     pw::this_thread::sleep_for(SystemClock::for_at_least(1s));
     PW_LOG_INFO("ThreadTest_Join");
   }).join();
 }
 
 TEST(ThreadTest, ContextReuseAfterJoin) {
-  static pw::thread::zephyr::StaticContextWithStack<512> thread_context;
-  pw::thread::Thread(pw::thread::zephyr::Options(thread_context), []() {
+  static pw::thread::backend::NativeContextWithStack<512> thread_context;
+  pw::thread::Thread(pw::thread::backend::GetNativeOptions(thread_context, {}), []() {
     pw::this_thread::sleep_for(SystemClock::for_at_least(200ms));
     PW_LOG_INFO("ThreadTest_Join_1");
   }).join();
-  pw::thread::Thread(pw::thread::zephyr::Options(thread_context), []() {
+  pw::thread::Thread(pw::thread::backend::GetNativeOptions(thread_context, {}), []() {
     pw::this_thread::sleep_for(SystemClock::for_at_least(200ms));
     PW_LOG_INFO("ThreadTest_Join_2");
   }).join();
 }
 
 TEST(ThreadTest, ContextReuseAfterDetach) {
-  static pw::thread::zephyr::StaticContextWithStack<512> thread_context;
-  pw::thread::Thread(pw::thread::zephyr::Options(thread_context), []() {
+  static pw::thread::backend::NativeContextWithStack<512> thread_context;
+  pw::thread::Thread(pw::thread::backend::GetNativeOptions(thread_context, {}), []() {
     pw::this_thread::sleep_for(SystemClock::for_at_least(200ms));
     PW_LOG_INFO("ThreadTest_Detach_1");
   }).detach();
   pw::this_thread::sleep_for(SystemClock::for_at_least(300ms));
-  pw::thread::Thread(pw::thread::zephyr::Options(thread_context), []() {
+  pw::thread::Thread(pw::thread::backend::GetNativeOptions(thread_context, {}), []() {
     pw::this_thread::sleep_for(SystemClock::for_at_least(200ms));
     PW_LOG_INFO("ThreadTest_Detach_2");
   }).detach();
@@ -224,11 +224,11 @@ int main() {
   while (true) {
     pw::this_thread::sleep_for(SystemClock::for_at_least(1s));
   };
- 
+
   pw::system::GetRpcServer().RegisterService(echo_service);
   pw::system::GetRpcServer().RegisterService(log_service);
 
-  static pw::thread::zephyr::StaticContextWithStack<2500> rpc_thread_context;
-  pw::thread::DetachedThread(pw::thread::zephyr::Options(rpc_thread_context).set_priority(2),
+  static pw::thread::backend::NativeContextWithStack<2500> rpc_thread_context;
+  pw::thread::DetachedThread(pw::thread::backend::NativeOptions(rpc_thread_context).set_priority(2),
                              pw::system::GetRpcDispatchThread());
 }
