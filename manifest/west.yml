@@ -13,5 +13,5 @@ manifest:
         path-prefix: third_party
     - name: pigweed
       remote: pigweed
-      revision: ecc28b0
+      revision: ccbb96c
       path: third_party/pigweed
