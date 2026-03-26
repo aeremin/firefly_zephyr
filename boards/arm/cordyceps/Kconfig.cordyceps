@@ -1,0 +1,2 @@
+config BOARD_CORDYCEPS
+	select SOC_NRF52833_QIAA
