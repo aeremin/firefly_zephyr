@@ -1,0 +1,6 @@
+name: firefly_zephyr
+build:
+  settings:
+    board_root: .
+
+

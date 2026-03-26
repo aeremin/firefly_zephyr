@@ -7,7 +7,7 @@ endif()
 # Note: this needs to happen **before** the `find_package(Zephyr)`, as
 # board lookup (based on BOARD root and --board argument passed to build)
 # happens inside `find_package(Zephyr)`.
-set(BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
+list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
 
 find_package(Zephyr)
 
