@@ -1,3 +1,0 @@
-config BOARD_FIREFLY_V1
-	bool "Firefly v.1"
-	depends on SOC_NRF52832_QFAA
