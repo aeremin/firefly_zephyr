@@ -1,9 +1,6 @@
-if BOARD_LOCK_V01
-
-config BOARD
-	default "lock_v01"
+if BOARD_LOCK_V01_NRF52840
 
 config BT_CTLR
 	default BT
 
-endif # BOARD_LOCK_V01
+endif # BOARD_LOCK_V01_NRF52840

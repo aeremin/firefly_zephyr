@@ -1,0 +1,5 @@
+board:
+  name: lock_v01
+  vendor: arm
+  socs:
+    - name: nrf52840
