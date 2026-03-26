@@ -1,0 +1,5 @@
+board:
+  name: power_meter
+  vendor: arm
+  socs:
+    - name: nrf52833

@@ -1,9 +1,6 @@
-if BOARD_POWER_METER
-
-config BOARD
-	default "power_meter_v1"
+if BOARD_POWER_METER_NRF52833
 
 config BT_CTLR
 	default BT
 
-endif # BOARD_POWER_METER
+endif # BOARD_POWER_METER_NRF52833

@@ -1,3 +1,0 @@
-config BOARD_POWER_METER
-	bool "Power meter"
-	depends on SOC_NRF52833_QIAA

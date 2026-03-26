@@ -1,0 +1,2 @@
+config BOARD_POWER_METER
+	select SOC_NRF52833_QIAA
