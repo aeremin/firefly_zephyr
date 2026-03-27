@@ -79,7 +79,7 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v6
         with:
           name: smoke_test_firefly.elf
       - run: stty -F /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034-if02 115200
@@ -88,7 +88,7 @@ jobs:
       - run: sleep 10
       - run: cat log.txt
       - run: cat log.txt | grep "All tests passed!"
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v6
         with:
           name: lock_test.elf
       - run: stty -F /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233-if02 115200
