@@ -7,7 +7,7 @@ manifest:
   projects:
     - name: sdk-nrf
       remote: sdk-nrf
-      revision: v2.8.0
+      revision: v2.7.0
       path: nrf
       import:
         path-prefix: third_party
