@@ -33,37 +33,37 @@ jobs:
         run: source third_party/zephyr/zephyr-env.sh
       - name: Validate Zephyr environment
         run: west manifest --validate
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/lock_test --pristine --board lock_v01 && mv ./build/lock_test/zephyr/zephyr.elf lock_test.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/lock_test --pristine --board lock_v01 && mv ./build/zephyr/zephyr.elf lock_test.elf
       - uses: actions/upload-artifact@v7
         with:
           name: lock_test.elf
           path: lock_test.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/lock --pristine --board lock_v01 && mv ./build/lock/zephyr/zephyr.hex lock.hex
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/lock --pristine --board lock_v01 && mv ./build/zephyr/zephyr.hex lock.hex
       - uses: actions/upload-artifact@v7
         with:
           name: lock.hex
           path: lock.hex
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/firefly --pristine --board firefly_v1&& mv ./build/firefly/zephyr/zephyr.elf firefly.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/firefly --pristine --board firefly_v1&& mv ./build/zephyr/zephyr.elf firefly.elf
       - uses: actions/upload-artifact@v7
         with:
           name: firefly.elf
           path: firefly.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/activator --pristine --board firefly_v1 && mv ./build/activator/zephyr/zephyr.elf activator.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/activator --pristine --board firefly_v1 && mv ./build/zephyr/zephyr.elf activator.elf
       - uses: actions/upload-artifact@v7
         with:
           name: activator.elf
           path: activator.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/smoke_test --pristine --board firefly_v1 && mv ./build/smoke_test/zephyr/zephyr.elf smoke_test_firefly.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/smoke_test --pristine --board firefly_v1 && mv ./build/zephyr/zephyr.elf smoke_test_firefly.elf
       - uses: actions/upload-artifact@v7
         with:
           name: smoke_test_firefly.elf
           path: smoke_test_firefly.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/power_meter --pristine --board power_meter && mv ./build/power_meter/zephyr/zephyr.elf power_meter.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/power_meter --pristine --board power_meter && mv ./build/zephyr/zephyr.elf power_meter.elf
       - uses: actions/upload-artifact@v7
         with:
           name: power_meter.elf
           path: power_meter.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/rothult_cordyceps --pristine --board cordyceps && mv ./build/rothult_cordyceps/zephyr/zephyr.elf rothult_cordyceps.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/rothult_cordyceps --pristine --board cordyceps && mv ./build/zephyr/zephyr.elf rothult_cordyceps.elf
       - uses: actions/upload-artifact@v7
         with:
           name: rothult_cordyceps.elf
