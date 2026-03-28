@@ -43,12 +43,12 @@ jobs:
         with:
           name: lock.hex
           path: lock.hex
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/firefly --pristine && mv ./build/firefly/zephyr/zephyr.elf firefly.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/firefly --pristine --board firefly_v1&& mv ./build/firefly/zephyr/zephyr.elf firefly.elf
       - uses: actions/upload-artifact@v7
         with:
           name: firefly.elf
           path: firefly.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/activator --pristine && mv ./build/activator/zephyr/zephyr.elf activator.elf
+      - run: source ./third_party/pigweed/activate.sh && west build firmware/activator --pristine --board firefly_v1 && mv ./build/activator/zephyr/zephyr.elf activator.elf
       - uses: actions/upload-artifact@v7
         with:
           name: activator.elf
