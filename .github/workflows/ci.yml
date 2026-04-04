@@ -134,13 +134,13 @@ jobs:
           commitHash: ${{ github.sha }}
       - uses: actions/download-artifact@v6
         with:
-          name: activator.hex      
-      - name: Upload activator.hex to Moma
+          name: activator.elf      
+      - name: Upload activator.elf to Moma
         uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
         with:
           userId: ${{ github.actor }}
           artifactId: activator
-          file: activator.hex
+          file: activator.elf
           commitHash: ${{ github.sha }}
       - uses: actions/download-artifact@v6
         with:
