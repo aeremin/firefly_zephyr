@@ -12,3 +12,5 @@ __pycache__
 
 # Some KiCad junk
 fp-info-cache
+
+node_modules/

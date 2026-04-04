@@ -15,6 +15,11 @@ jobs:
       GNUARMEMB_TOOLCHAIN_PATH: /home/runner/work/firefly_zephyr/firefly_zephyr/third_party/pigweed/environment/cipd/packages/arm
     steps:
       - uses: actions/checkout@v1
+      - name: Test Local Action
+        id: moma-upload-action
+        uses: ./.github/actions/moma-upload
+        with:
+          milliseconds: 1000
       - name: Install dependencies via APT
         run: sudo apt-get update && sudo apt-get install --no-install-recommends gperf dfu-util device-tree-compiler wget xz-utils file libsdl2-dev
       - name: Install West globally
