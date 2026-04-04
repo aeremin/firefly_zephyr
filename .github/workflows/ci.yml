@@ -102,7 +102,7 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: lock_test.elf      
       - name: Upload lock_test.elf to Moma
@@ -112,7 +112,7 @@ jobs:
           artifactId: lock_test
           file: lock_test.elf
           commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: lock.hex      
       - name: Upload lock.hex to Moma
@@ -122,7 +122,7 @@ jobs:
           artifactId: lock
           file: lock.hex
           commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: firefly.elf      
       - name: Upload firefly.elf to Moma
@@ -132,7 +132,7 @@ jobs:
           artifactId: firefly
           file: firefly.elf
           commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: activator.elf      
       - name: Upload activator.elf to Moma
@@ -142,7 +142,7 @@ jobs:
           artifactId: activator
           file: activator.elf
           commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: smoke_test_firefly.elf   
       - name: Upload smoke_test_firefly.elf to Moma
@@ -152,7 +152,7 @@ jobs:
           artifactId: smoke_test_firefly
           file: smoke_test_firefly.elf
           commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: power_meter.elf      
       - name: Upload power_meter.elf to Moma
@@ -162,7 +162,7 @@ jobs:
           artifactId: power_meter
           file: power_meter.elf
           commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: rothult_cordyceps.elf      
       - name: Upload rothult_cordyceps.elf to Moma
