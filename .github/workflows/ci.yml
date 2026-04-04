@@ -15,11 +15,6 @@ jobs:
       GNUARMEMB_TOOLCHAIN_PATH: /home/runner/work/firefly_zephyr/firefly_zephyr/third_party/pigweed/environment/cipd/packages/arm
     steps:
       - uses: actions/checkout@v1
-      - name: Test Remote Action
-        id: moma-upload-action
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.1
-        with:
-          milliseconds: 5000
       - name: Install dependencies via APT
         run: sudo apt-get update && sudo apt-get install --no-install-recommends gperf dfu-util device-tree-compiler wget xz-utils file libsdl2-dev
       - name: Install West globally
@@ -102,3 +97,78 @@ jobs:
       - run: sleep 10
       - run: cat log.txt
       - run: cat log.txt | grep "All tests passed!"
+  store_artifacts:
+    runs-on: ubuntu-22.04
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/download-artifact@v6
+        with:
+          name: lock_test.elf      
+      - name: Upload lock_test.elf to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: lock_test
+          file: lock_test.elf
+          commitHash: ${{ github.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: lock.hex      
+      - name: Upload lock.hex to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: lock
+          file: lock.hex
+          commitHash: ${{ github.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: firefly.elf      
+      - name: Upload firefly.elf to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: firefly
+          file: firefly.elf
+          commitHash: ${{ github.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: activator.hex      
+      - name: Upload activator.hex to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: activator
+          file: activator.hex
+          commitHash: ${{ github.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: smoke_test_firefly.elf   
+      - name: Upload smoke_test_firefly.elf to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: smoke_test_firefly
+          file: smoke_test_firefly.elf
+          commitHash: ${{ github.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: power_meter.elf      
+      - name: Upload power_meter.elf to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: power_meter
+          file: power_meter.elf
+          commitHash: ${{ github.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: rothult_cordyceps.elf      
+      - name: Upload rothult_cordyceps.elf to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+        with:
+          userId: ${{ github.actor }}
+          artifactId: rothult_cordyceps
+          file: rothult_cordyceps.elf
+          commitHash: ${{ github.sha }}
