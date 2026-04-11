@@ -1,6 +1,6 @@
 if BOARD_FIREFLY_V1_NRF52832
 
-config BT_CTLR
+config HAS_BT_CTLR
 	default BT
 
 endif # BOARD_FIREFLY_V1_NRF52832

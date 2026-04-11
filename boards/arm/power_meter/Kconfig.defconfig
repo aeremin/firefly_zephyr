@@ -1,6 +1,6 @@
 if BOARD_POWER_METER_NRF52833
 
-config BT_CTLR
+config HAS_BT_CTLR
 	default BT
 
 endif # BOARD_POWER_METER_NRF52833

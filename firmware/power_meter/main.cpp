@@ -1,4 +1,5 @@
 #include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
@@ -30,10 +31,13 @@ static const bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
     BT_DATA(BT_DATA_UUID128_SOME, power_meter_service_uuid.val, sizeof(power_meter_service_uuid.val))};
 
+static const bt_data sd[] = {
+    BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1)};
+
 bt_le_adv_param ConnectableFastAdvertisingParams() {
   return {
       .id = 0,
-      .options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME,
+      .options = BT_LE_ADV_OPT_CONN,
       .interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
       .interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
   };
@@ -205,7 +209,7 @@ void InitBleAdvertising(const bt_le_adv_param& params) {
 
   LOG_INF("Bluetooth initialized");
 
-  err = bt_le_adv_start(&params, ad, ARRAY_SIZE(ad), nullptr, 0);
+  err = bt_le_adv_start(&params, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
     return;
