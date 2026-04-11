@@ -18,7 +18,9 @@ class Timer {
 
   void Cancel();
  private:
+  static void WorkHandler(k_work* work);
   k_timer timer_;
+  k_work work_;
   pw::Function<void()> action_;
 };
 
