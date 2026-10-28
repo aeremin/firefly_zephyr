@@ -46,8 +46,8 @@ west flash
 Flashing with a Black Magic Probe is described in [docs/Developing.md](docs/Developing.md#black-magic-probe).
 
 CI builds all images on every push and runs hardware-in-the-loop tests on a test
-rack: the `smoke_test` and `lock_test` images, and the real `firefly` and `lock`
-images. See [docs/INTEGRATION_TESTING.md](docs/INTEGRATION_TESTING.md).
+rack: the `smoke_test` and `lock_test` images, and the real `firefly` image. See
+[docs/INTEGRATION_TESTING.md](docs/INTEGRATION_TESTING.md).
 
 # Firmware images
 

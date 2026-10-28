@@ -72,7 +72,10 @@ Checks:
 | `smoke_test_firefly` | All `pw_unit_test` tests pass (per-test results in the report).       |
 | `lock_test`          | Same.                                                                |
 | `firefly`            | Boots (startup log line, no fault or assert in the log); advertises, and again after a connection; battery level readable and in range; writing Beep / Blink produces "Beep!" / "Blink!" in the log. |
-| `lock`               | Same boot and BLE checks (reconnect, Beep / Blink).                   |
+
+The real `lock` image isn't tested: it needs an MFRC522 NFC reader on the lock
+board's expansion header (and stops with an assert without one), and the rack's
+lock board has none.
 
 Compared to the previous shell steps, waiting is based on log lines with
 timeouts instead of fixed sleeps, and results are reported per test (JUnit
