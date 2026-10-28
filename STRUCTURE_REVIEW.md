@@ -19,8 +19,6 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
-| H1 | Untrack files that shouldn't be in git         | Partially done |
-| H2 | Clean local leftovers                          | Open           |
 | H3 | Dead or incomplete entries                     | Open           |
 | H4 | Consistent policy for KiCad production outputs | Open           |
 | H5 | Consolidate symbol libraries                   | Open           |
@@ -127,19 +125,6 @@ steps in one step (or export the environment via `$GITHUB_ENV` /
 Put them under a top-level `tests/` folder, separate from on-target images.
 
 ## H. Repository hygiene
-
-### H1. Untrack files that shouldn't be in git — partially done
-
-`research/voltcraft/` (including its `.idea/`) is gone. Still tracked:
-
-* `.vscode/.cortex-debug.*.state.json` (per-user debugger state)
-* `hardware/libs/Common.bak`
-
-### H2. Clean local leftovers — open
-
-Not in git, but present in the working copy: `firmware/microkeyboard/`
-(contains only `build/`), `firmware/smoke_test/build/` plus
-`firmware/smoke_test/cmake-build-debug/`, and an empty `firmware/common/spi/`.
 
 ### H3. Dead or incomplete entries — open
 

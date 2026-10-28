@@ -17,3 +17,9 @@ node_modules/
 
 # Pigweed console (pw console) logs
 pw_console-*logs.txt
+
+# Per-user debugger state (VS Code Cortex-Debug)
+.vscode/.cortex-debug.*.state.json
+
+# KiCad backups
+*.bak
