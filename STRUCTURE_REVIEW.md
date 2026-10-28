@@ -14,15 +14,14 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | D2 | Shared Kconfig fragment                        | Open           |
 | L1 | Split `firmware/common` by purpose             | Open           |
 | L2 | Fix ODR violation in `eeprom.h`                | Open           |
-| C1 | Fix the release step                           | Partially done |
 | C2 | Replace copy-pasted CI steps                   | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Partially done |
 
-Suggested next steps: **C1/C2** (fix the release step, deduplicate CI) and
-**L2** (ODR violation in `eeprom.h`).
+Suggested next steps: **C2** (deduplicate CI) and **L2** (ODR violation in
+`eeprom.h`).
 
 ## B. Build and dependency structure
 
@@ -63,17 +62,6 @@ translation units in one image include it, linking fails. Mark them `inline`
 or move them into a `.cpp`.
 
 ## C. CI (`.github/workflows/ci.yml`)
-
-### C1. Fix the release step — partially done
-
-Everything is `.elf` now, and the release step lists
-`firefly.elf, activator.elf, smoke_test.elf, smoke_test_firefly.elf`.
-Remaining:
-
-* `smoke_test.elf` is never produced (the only smoke test artifact is
-  `smoke_test_firefly.elf`).
-* `lock.elf`, `lock_test.elf`, `power_meter.elf` and `rothult_cordyceps.elf`
-  are built but not attached to releases.
 
 ### C2. Replace copy-pasted CI steps — open
 

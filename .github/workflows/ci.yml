@@ -87,7 +87,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          artifacts: firefly.elf,activator.elf,smoke_test.elf,smoke_test_firefly.elf
+          artifacts: firefly.elf,activator.elf,smoke_test_firefly.elf,lock.elf,lock_test.elf,power_meter.elf,rothult_cordyceps.elf
           bodyFile: RELEASE.md
           token: ${{ secrets.GITHUB_TOKEN }}
   hardware_test:
