@@ -30,8 +30,17 @@ together nicely:
   `third_party\pigweed\bootstrap.bat` depending on OS). This will install Pigweed toolchain
   (including python), initialize and populate python virtual environment, set up
   some environment variables.
-* Install Zephyr RTOS python dependencies (again, to the Pigweed's python's venv!):
-  `pip install -r third_party/zephyr/scripts/requirements.txt`.
+* Install Zephyr RTOS, nRF Connect SDK and MCUboot python dependencies (again, to the Pigweed's python's venv!):
+  ```
+  pip install -r third_party/zephyr/scripts/requirements.txt
+  pip install -r third_party/nrf/scripts/requirements.txt
+  pip install -r third_party/bootloader/mcuboot/scripts/requirements.txt
+  pip install "protobuf~=6.33.4"
+  ```
+  The last line is needed because nRF Connect SDK requirements downgrade `protobuf`
+  to 4.x, which breaks Pigweed's protobuf code generation (`lock_test` fails with
+  `cannot import name 'runtime_version' from 'google.protobuf'`). Use the version
+  Pigweed declares (`pip show pigweed` lists it under "Requires").
 * Start VS Code (from the same console!): `"C:\Program Files\Microsoft VS Code\Code.exe" .` (or just `code .` if you have it in PATH).
 * Add the following to your VS Code `settings.json`
   (Global one, not the one in repo):
@@ -54,6 +63,18 @@ together nicely:
 * Activate Pigweed environment (`source third_party/pigweed/activate.sh` or
   `third_party\pigweed\activate.bat` depending on OS).
 * Start VS Code (from the same console!): `"C:\Program Files\Microsoft VS Code\Code.exe" .` (or just `code .` if you have it in PATH).
+
+## After `manifest/west.yml` changes
+
+When sdk-nrf or Pigweed revision is bumped, bring the local workspace in line:
+* `west update` (from the repository root). If it complains about local changes
+  in some `third_party` project, stash or drop them first.
+* Re-bootstrap Pigweed (`source third_party/pigweed/bootstrap.sh` or
+  `third_party\pigweed\bootstrap.bat`), as a new revision can bring a new toolchain
+  and python version.
+* Re-install python dependencies, same as during the first time set up (including
+  the `protobuf` step).
+* `west zephyr-export`.
 
 # Flashing
 

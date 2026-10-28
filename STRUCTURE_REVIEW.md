@@ -16,7 +16,7 @@ stuff"):
 |----|------------------------------------------------|----------------|
 | B1 | Make the repository a Zephyr module            | Partially done |
 | B2 | Pin Pigweed                                    | Done           |
-| B3 | Bring local workspace in line with manifest    | Open           |
+| B3 | Bring local workspace in line with manifest    | Done           |
 | B4 | Migrate boards to hardware model v2            | Partially done |
 | B5 | Consistent default boards                      | Open           |
 | D1 | Single definition of `custom_library()`        | Open           |
@@ -30,6 +30,7 @@ stuff"):
 | C3 | Cache dependencies                             | Open           |
 | C4 | Update actions                                 | Partially done |
 | C5 | Deduplicate the hardware test job              | Open           |
+| C6 | Make CI install Python deps like local setup   | Open (new)     |
 | T1 | Host-side unit tests                           | Open           |
 | H1 | Untrack files that shouldn't be in git         | Partially done |
 | H2 | Clean local leftovers                          | Open           |
@@ -78,14 +79,19 @@ Remaining:
 prefer the full 40-character hash. A short hash only resolves if it's
 reachable from the refs west fetches, and is ambiguous in principle.
 
-### B3. Bring the local workspace in line with the manifest — open
+### B3. Bring the local workspace in line with the manifest — done
 
-The manifest now requests sdk-nrf v3.2.4, but the local
-`third_party/zephyr/VERSION` still says 3.4.99 (NCS 2.5) and the local Pigweed
-checkout is from November 2023. Locally, `lock`, `lock_test` and `smoke_test`
-don't build (`zephyr/random/random.h` needs Zephyr ≥ 3.5), and the migrated
-boards (B4) can't work with the old Zephyr. Run `west update` and re-bootstrap
-Pigweed.
+The local workspace was on NCS 2.5 (Zephyr 3.4.99) with a November 2023
+Pigweed, so `lock`, `lock_test` and `smoke_test` didn't build locally. It's now
+on sdk-nrf v3.2.4 (Zephyr 4.2.99) and Pigweed `ccbb96c`, with Pigweed
+re-bootstrapped (Python 3.10 venv) and Zephyr / NCS / MCUboot requirements
+installed. All seven CI images build locally.
+
+One trap found on the way: the NCS requirements downgrade `protobuf` to 4.x,
+which breaks Pigweed's protobuf code generation in `lock_test`. Reinstalling
+`protobuf~=6.33.4` (the version Pigweed declares) fixes it.
+`docs/Developing.md` now covers this, plus how to update the workspace after a
+manifest bump. See also C6.
 
 ### B4. Migrate boards to hardware model v2 — partially done
 
@@ -194,6 +200,18 @@ still use `actions/checkout@v1`; move to `@v4` or later.
 Black Magic Probe serial paths are hardcoded twice. Move them into job `env`
 variables, or into a `scripts/flash_and_check.sh` usable both from CI and
 locally.
+
+### C6. Make CI install Python deps like the local setup — open (new)
+
+Each `run:` step in GitHub Actions is a fresh shell, so the environment from
+`source third_party/pigweed/bootstrap.sh` (and `zephyr-env.sh`) doesn't carry
+over to the following steps. The `pip3 install -r ...` steps therefore install
+the Zephyr / NCS / MCUboot requirements outside the Pigweed venv, unlike the
+documented local setup in `docs/Developing.md`. That's likely why CI doesn't hit
+the `protobuf` downgrade from B3, and it means CI and local builds use
+different Python environments. Run bootstrap/activate and the `pip install`
+steps in one step (or export the environment via `$GITHUB_ENV` /
+`$GITHUB_PATH`), and pin `protobuf` the same way as locally.
 
 ## T. Tests
 
