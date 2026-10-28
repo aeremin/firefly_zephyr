@@ -83,33 +83,32 @@ jobs:
           artifactId: ${{ matrix.image }}
           file: ${{ matrix.image }}.elf
           commitHash: ${{ github.sha }}
+  # Hardware-in-the-loop tests on the test rack, see tests/hil and docs/INTEGRATION_TESTING.md.
   hardware_test:
     runs-on: self-hosted
     needs: [build]
-    strategy:
-      fail-fast: false
-      matrix:
-        # `probe` is the Black Magic Probe attached to the test board. It exposes the GDB
-        # server on interface 00 and the target's UART on interface 02.
-        include:
-          - image: smoke_test_firefly
-            probe: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034
-          - image: lock_test
-            probe: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233
-    name: hardware_test (${{ matrix.image }})
+    timeout-minutes: 20
     env:
-      PROBE: ${{ matrix.probe }}
+      # Black Magic Probes attached to the test boards (without the -if00 / -if02 suffix).
+      FIREFLY_PROBE: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034
+      LOCK_PROBE: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          name: ${{ matrix.image }}.elf
-      - run: stty -F "$PROBE-if02" 115200
-      - run: cat "$PROBE-if02" > log.txt &
-      - run: gdb-multiarch -nx --batch -ex "target extended-remote $PROBE-if00" -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' ${{ matrix.image }}.elf
-      - run: sleep 10
-      - run: cat log.txt
-      - run: cat log.txt | grep "All tests passed!"
+          pattern: '*.elf'
+          path: elf
+          merge-multiple: true
+      - name: Install test dependencies
+        run: python3 -m venv .venv && .venv/bin/pip install -r tests/hil/requirements.txt
+      - name: Run hardware-in-the-loop tests
+        # --ble uses the runner's (Raspberry Pi 3) onboard Bluetooth adapter through BlueZ.
+        run: .venv/bin/pytest tests/hil --elf-dir elf --require-all-boards --ble -v -rs --junitxml=hil-report.xml
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hil-report
+          path: hil-report.xml
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04

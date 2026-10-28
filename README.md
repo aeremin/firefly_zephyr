@@ -45,8 +45,9 @@ west flash
 ```
 Flashing with a Black Magic Probe is described in [docs/Developing.md](docs/Developing.md#black-magic-probe).
 
-CI builds all images on every push and runs `smoke_test` and `lock_test` on real
-hardware.
+CI builds all images on every push and runs hardware-in-the-loop tests on a test
+rack: the `smoke_test` and `lock_test` images, and the real `firefly` and `lock`
+images. See [docs/INTEGRATION_TESTING.md](docs/INTEGRATION_TESTING.md).
 
 # Firmware images
 
@@ -100,8 +101,9 @@ Behaviours:
     close/open command to the lock over UART.
 
 ## Tests (`smoke_test`, `lock_test`)
-On-target test images (Pigweed `pw_unit_test`), run by CI on real hardware. They
-print the test log to the UART/RTT and end with "All tests passed!" on success.
+On-target test images (Pigweed `pw_unit_test`), run by CI on real hardware
+(`tests/hil`). They print the test log to the UART/RTT and end with
+"All tests passed!" on success.
 * `smoke_test` (board `firefly_v1`): CC1101 radio, RGB LED, timers.
 * `lock_test` (board `lock_v01`): RGB LED, timers, EEPROM, expansion headers, threads,
   Pigweed RPC.

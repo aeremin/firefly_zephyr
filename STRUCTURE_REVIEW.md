@@ -15,6 +15,7 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | D2 | Shared Kconfig fragment                        | Open           |
 | L1 | Split `firmware/common` by purpose             | Open           |
 | T1 | Host-side unit tests                           | Open           |
+| T2 | `lock_test` never starts its RPC server        | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Partially done |
 
@@ -88,6 +89,18 @@ It is a flat mix of unrelated code. Suggested split:
 (`color`, `nfc_definitions`, `bitmap_enum`, `sequences`) could get host tests on
 `native_sim` with `pw_unit_test`, running in every CI build without hardware.
 Put them under a top-level `tests/` folder, separate from on-target images.
+Good candidates beyond those: firefly's `PacketsLog` color mixing / timeout
+(needs an injectable clock instead of `k_uptime_get()`) and the battery voltage
+to level formula, both currently inside `firmware/firefly/main.cpp`.
+
+### T2. `lock_test` never starts its RPC server — open
+
+In `firmware/lock_test/main.cpp`, `main()` runs the tests and then loops
+forever (`while (true) sleep_for(1s)`); the RPC service registration and the
+RPC dispatch thread come after that loop, so they're unreachable.
+`rpc_example.py` and the `pw_log` RPC service can't work against this image.
+Start the RPC thread before the loop (and decide whether the hardware tests
+should exercise it, see `docs/INTEGRATION_TESTING.md`).
 
 ## H. Repository hygiene
 
