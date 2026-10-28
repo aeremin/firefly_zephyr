@@ -16,7 +16,6 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | L2 | Fix ODR violation in `eeprom.h`                | Open           |
 | C1 | Fix the release step                           | Partially done |
 | C2 | Replace copy-pasted CI steps                   | Open           |
-| C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
@@ -88,12 +87,6 @@ command.
 For twister, every board needs a `<board>.yaml` with test metadata:
 `firefly_v1` and `lock_v01` have one, `cordyceps` and `power_meter` don't, and
 the existing two list an `xtools` toolchain that isn't used here.
-
-### C5. Deduplicate the hardware test job — open
-
-Black Magic Probe serial paths are hardcoded twice. Move them into job `env`
-variables, or into a `scripts/flash_and_check.sh` usable both from CI and
-locally.
 
 ### C6. Make CI install Python deps like the local setup — open
 

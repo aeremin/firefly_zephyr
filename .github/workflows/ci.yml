@@ -93,23 +93,28 @@ jobs:
   hardware_test:
     runs-on: self-hosted
     needs: [build]
+    env:
+      # Black Magic Probes attached to the test boards. Each one exposes the GDB
+      # server on interface 00 and the target's UART on interface 02.
+      FIREFLY_PROBE: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034
+      LOCK_PROBE: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: smoke_test_firefly.elf
-      - run: stty -F /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034-if02 115200
-      - run: cat /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034-if02 > log.txt &
-      - run: gdb-multiarch -nx --batch -ex 'target extended-remote /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034-if00' -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' smoke_test_firefly.elf
+      - run: stty -F "$FIREFLY_PROBE-if02" 115200
+      - run: cat "$FIREFLY_PROBE-if02" > log.txt &
+      - run: gdb-multiarch -nx --batch -ex "target extended-remote $FIREFLY_PROBE-if00" -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' smoke_test_firefly.elf
       - run: sleep 10
       - run: cat log.txt
       - run: cat log.txt | grep "All tests passed!"
       - uses: actions/download-artifact@v8
         with:
           name: lock_test.elf
-      - run: stty -F /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233-if02 115200
-      - run: cat /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233-if02 > log.txt &
-      - run: gdb-multiarch -nx --batch -ex 'target extended-remote /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233-if00' -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' lock_test.elf
+      - run: stty -F "$LOCK_PROBE-if02" 115200
+      - run: cat "$LOCK_PROBE-if02" > log.txt &
+      - run: gdb-multiarch -nx --batch -ex "target extended-remote $LOCK_PROBE-if00" -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' lock_test.elf
       - run: sleep 10
       - run: cat log.txt
       - run: cat log.txt | grep "All tests passed!"
