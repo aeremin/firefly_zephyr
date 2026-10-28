@@ -43,7 +43,7 @@ stuff"):
 | N3 | Update `RELEASE.md`                            | Open           |
 
 Suggested starting point: **B1** (finish the Zephyr module, which also resolves
-D1 and D3), **B4** (`locket` board) and **C1/C2** (fix the release step,
+D1 and D3) and **C1/C2** (fix the release step,
 deduplicate CI).
 
 ## B. Build and dependency structure
@@ -98,14 +98,13 @@ manifest bump. See also C6.
 Done upstream: `cordyceps`, `firefly_v1`, `lock_v01` and `power_meter` have
 `board.yml` and `Kconfig.<board>` and build on NCS 3.2.4.
 
-Remaining:
+The `locket` board, which was still in the legacy format and had no
+firmware using it, has been deleted.
 
-* `locket` is still in the legacy format (`Kconfig.board`, no `board.yml`),
-  so the current Zephyr can't see it. Migrate or delete it (see also H3).
-* The boards declare `vendor: arm` and live in `boards/arm/`. `arm` is the
-  vendor prefix for Arm Ltd, not an architecture folder any more. Consider a
-  custom vendor (e.g. `boards/ostranna/<board>/`, with a
-  `dts/bindings/vendor-prefixes.txt` entry in the module).
+Remaining: the boards declare `vendor: arm` and live in `boards/arm/`. `arm` is
+the vendor prefix for Arm Ltd, not an architecture folder any more. Consider a
+custom vendor (e.g. `boards/ostranna/<board>/`, with a
+`dts/bindings/vendor-prefixes.txt` entry in the module).
 
 ### B5. Consistent default boards — open
 
@@ -240,8 +239,7 @@ Not in git, but present in the working copy: `firmware/microkeyboard/`
 
 ### H3. Dead or incomplete entries — open
 
-* The `locket` board isn't used by any app or CI job, and wasn't migrated to
-  hardware model v2 (B4): delete it or migrate it and add an app.
+* ~~The `locket` board isn't used by any app or CI job~~ — deleted (B4).
 * `.vscode/settings.json` (`nrf-connect.applications`) lists six apps and is
   missing `rothult_cordyceps`.
 * `rothult_cordyceps` and `power_meter` don't use `common` at all. That's fine,

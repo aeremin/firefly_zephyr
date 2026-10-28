@@ -1,6 +1,0 @@
-if BOARD_LOCKET
-
-config BOARD
-	default "locket"
-
-endif # BOARD_LOCKET
