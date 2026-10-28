@@ -5,6 +5,7 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/services/bas.h>
 #include <zephyr/bluetooth/uuid.h>
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER();
@@ -40,6 +41,32 @@ bt_le_adv_param ConnectableFastAdvertisingParams() {
   };
 }
 
+namespace {
+bt_le_adv_param advertising_params;
+
+void StartAdvertising(k_work*) {
+  auto err = bt_le_adv_start(&advertising_params, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+  if (err) {
+    LOG_ERR("Advertising failed to start (err %d)", err);
+    return;
+  }
+
+  LOG_INF("Advertising successfully started");
+}
+
+K_WORK_DEFINE(start_advertising_work, StartAdvertising);
+
+// Connectable advertising stops once a connection is made, restart it when the
+// connection object is free again (i.e. after the disconnection).
+void OnConnectionRecycled() {
+  k_work_submit(&start_advertising_work);
+}
+
+BT_CONN_CB_DEFINE(connection_callbacks) = {
+  .recycled = OnConnectionRecycled,
+};
+}  // namespace
+
 void InitBleAdvertising(const bt_le_adv_param& params) {
   auto err = bt_enable(nullptr);
   if (err) {
@@ -49,13 +76,8 @@ void InitBleAdvertising(const bt_le_adv_param& params) {
 
   LOG_INF("Bluetooth initialized");
 
-  err = bt_le_adv_start(&params, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
-  if (err) {
-    LOG_ERR("Advertising failed to start (err %d)", err);
-    return;
-  }
-
-  LOG_INF("Advertising successfully started");
+  advertising_params = params;
+  StartAdvertising(nullptr);
 }
 
 void SetBatteryLevel(uint8_t level) {

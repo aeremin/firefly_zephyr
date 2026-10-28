@@ -34,6 +34,16 @@ def advertised_name(address: str) -> str | None:
     return asyncio.run(run())
 
 
+def connect(address: str) -> None:
+    """Connects to the device and disconnects again."""
+
+    async def run():
+        async with BleakClient(await _find(address)):
+            pass
+
+    asyncio.run(run())
+
+
 def read(address: str, uuid: str) -> bytes:
     async def run():
         async with BleakClient(await _find(address)) as client:

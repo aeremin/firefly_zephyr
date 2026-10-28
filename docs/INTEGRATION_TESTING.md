@@ -71,8 +71,8 @@ Checks:
 |----------------------|----------------------------------------------------------------------|
 | `smoke_test_firefly` | All `pw_unit_test` tests pass (per-test results in the report).       |
 | `lock_test`          | Same.                                                                |
-| `firefly`            | Boots (startup log line, no fault or assert in the log); advertises; battery level readable and in range; writing Beep / Blink produces "Beep!" / "Blink!" in the log. |
-| `lock`               | Same boot and BLE checks (Beep / Blink).                              |
+| `firefly`            | Boots (startup log line, no fault or assert in the log); advertises, and again after a connection; battery level readable and in range; writing Beep / Blink produces "Beep!" / "Blink!" in the log. |
+| `lock`               | Same boot and BLE checks (reconnect, Beep / Blink).                   |
 
 Compared to the previous shell steps, waiting is based on log lines with
 timeouts instead of fixed sleeps, and results are reported per test (JUnit

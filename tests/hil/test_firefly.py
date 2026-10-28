@@ -29,6 +29,14 @@ def test_advertises_its_name(address):
 
 
 @pytest.mark.ble
+def test_advertises_again_after_a_connection(firefly, address):
+    before = firefly.board.uart.mark()
+    ble.connect(address)
+    firefly.wait_for_next(r'Advertising successfully started', LOG_TIMEOUT_S, after=before)
+    assert ble.advertised_name(address) == 'Firefly v.1'
+
+
+@pytest.mark.ble
 def test_battery_level_is_readable(address):
     level = ble.read(address, ble.BATTERY_LEVEL_UUID)
     assert len(level) == 1 and 0 <= level[0] <= 100

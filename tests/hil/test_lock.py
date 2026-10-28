@@ -29,6 +29,14 @@ def test_advertises_its_name(address):
 
 
 @pytest.mark.ble
+def test_advertises_again_after_a_connection(lock, address):
+    before = lock.board.uart.mark()
+    ble.connect(address)
+    lock.wait_for_next(r'Advertising successfully started', LOG_TIMEOUT_S, after=before)
+    assert ble.advertised_name(address) == 'Lock v0.1'
+
+
+@pytest.mark.ble
 def test_beep(lock, address):
     before = lock.board.uart.mark()
     ble.write(address, ble.BEEP_UUID, bytes([ble.BEEP_VOLUME]))

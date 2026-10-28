@@ -96,6 +96,30 @@ BT_GATT_SERVICE_DEFINE(
                            BT_GATT_PERM_READ | BT_GATT_PERM_WRITE, ReadOpenClose, WriteOpenClose, nullptr),
     BT_GATT_CUD("Lock is closed", BT_GATT_PERM_READ), );
 
+bt_le_adv_param advertising_params;
+
+void StartAdvertising(k_work*) {
+  auto err = bt_le_adv_start(&advertising_params, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+  if (err) {
+    LOG_ERR("Advertising failed to start (err %d)", err);
+    return;
+  }
+
+  LOG_INF("Advertising successfully started");
+}
+
+K_WORK_DEFINE(start_advertising_work, StartAdvertising);
+
+// Connectable advertising stops once a connection is made, restart it when the
+// connection object is free again (i.e. after the disconnection).
+void OnConnectionRecycled() {
+  k_work_submit(&start_advertising_work);
+}
+
+BT_CONN_CB_DEFINE(connection_callbacks) = {
+    .recycled = OnConnectionRecycled,
+};
+
 void InitBleAdvertising(const bt_le_adv_param& params) {
   auto err = bt_enable(nullptr);
   if (err) {
@@ -105,13 +129,8 @@ void InitBleAdvertising(const bt_le_adv_param& params) {
 
   LOG_INF("Bluetooth initialized");
 
-  err = bt_le_adv_start(&params, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
-  if (err) {
-    LOG_ERR("Advertising failed to start (err %d)", err);
-    return;
-  }
-
-  LOG_INF("Advertising successfully started");
+  advertising_params = params;
+  StartAdvertising(nullptr);
 }
 
 void OnButtonPress(const device* gpio, gpio_callback* cb, uint32_t pins) {
