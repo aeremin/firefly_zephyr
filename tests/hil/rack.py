@@ -23,6 +23,11 @@ FAULT_PATTERNS = (
     re.compile(r'ASSERTION FAIL'),
 )
 
+# Zephyr's boot banner, printed once per boot.
+BOOT_BANNER = re.compile(r'\*\*\* Booting ')
+# Logged at boot by images that report why they were reset (e.g. firefly).
+RESET_CAUSE = re.compile(r'Reset cause: .*')
+
 
 class UartLog:
     """Captures a serial port line by line in a background thread."""
@@ -149,7 +154,18 @@ class RunningImage:
         return self.board.uart.wait_for(pattern, after, timeout)
 
     def faults(self) -> list[str]:
-        return self.board.uart.faults(self.since)
+        """Fatal errors and failed assertions, and resets after the boot that followed flashing.
+
+        A reset without a logged fault (e.g. a brownout) only shows up as another boot banner.
+        """
+        lines = self.board.uart.lines(self.since)
+        boots = [i for i, line in enumerate(lines) if BOOT_BANNER.search(line)]
+        resets = []
+        for i in boots[1:]:
+            causes = (RESET_CAUSE.search(line) for line in lines[i : i + 20])
+            cause = next((c.group(0) for c in causes if c), 'Reset cause not logged')
+            resets.append(f'Unexpected reset ({cause}), before: {lines[i - 1]!r}')
+        return self.board.uart.faults(self.since) + resets
 
     def ble_address(self, timeout: float = 15) -> str:
         """The Bluetooth identity address, as logged by Zephyr's Bluetooth host."""

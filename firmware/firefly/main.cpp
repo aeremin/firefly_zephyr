@@ -1,6 +1,7 @@
 #include <array>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/hwinfo.h>
 #include <zephyr/drivers/spi.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
@@ -126,8 +127,26 @@ BT_GATT_SERVICE_DEFINE(firefly_service,
 );
 
 
+void LogResetCause() {
+  uint32_t cause = 0;
+  if (hwinfo_get_reset_cause(&cause) != 0) {
+    return;
+  }
+  // The flags accumulate across resets until cleared.
+  hwinfo_clear_reset_cause();
+  // nRF52 sets no flag for a power-on reset or a brownout.
+  LOG_WRN("Reset cause: 0x%x%s%s%s%s%s%s", cause,
+          cause == 0 ? " power-on/brownout" : "",
+          (cause & RESET_PIN) ? " pin" : "",
+          (cause & RESET_SOFTWARE) ? " software" : "",
+          (cause & RESET_WATCHDOG) ? " watchdog" : "",
+          (cause & RESET_CPU_LOCKUP) ? " lockup" : "",
+          (cause & RESET_DEBUG) ? " debug" : "");
+}
+
 int main(void) {
   LOG_WRN("Hello! Application started successfully.");
+  LogResetCause();
   InitBleAdvertising(ConnectableSlowAdvertisingParams());
 
   Cc1101 cc1101;
