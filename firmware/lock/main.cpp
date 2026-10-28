@@ -85,6 +85,9 @@ int main() {
 
   gpio_pin_configure_dt(&gnd_gpio_device_spec, GPIO_OUTPUT_INACTIVE);
   gpio_pin_configure_dt(&rst_gpio_device_spec, GPIO_OUTPUT_ACTIVE);
+  // The MFRC522 is only usable once its oscillator is running after the power-up / reset
+  // (MFRC522 datasheet, section 8.8.2). Common drivers wait 50 ms.
+  k_sleep(K_MSEC(50));
 
   Nfc nfc;
   nfc.Init();
