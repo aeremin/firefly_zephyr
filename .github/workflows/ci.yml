@@ -21,22 +21,14 @@ jobs:
         run: pip3 install west
       - name: Initialize west workspace
         run: west init -l manifest
-      # Dependencies (west projects and Pigweed environment) are cached, keyed on the
-      # manifest: any revision bump there makes a fresh download.
-      - name: Restore west projects from cache
-        id: west-cache
-        uses: actions/cache@v6
-        with:
-          path: |
-            third_party
-            !third_party/pigweed/environment
-          key: west-projects-${{ runner.os }}-${{ hashFiles('manifest/west.yml') }}
       - name: Download dependencies (including Zephyr RTOS, Pigweed and nRF Connect SDK)
-        if: steps.west-cache.outputs.cache-hit != 'true'
-        # Only the pinned revisions without history: makes both download and cache much smaller.
+        # Only the pinned revisions without history. Not cached: this download is
+        # faster than restoring the same files from the GitHub Actions cache.
         run: west update --narrow -o=--depth=1
       - name: Export Zephyr CMake package
         run: west zephyr-export
+      # The Pigweed environment is cached, keyed on the manifest (which pins the
+      # Pigweed revision): restoring it is much faster than a bootstrap.
       - name: Restore Pigweed environment from cache
         id: pigweed-cache
         uses: actions/cache@v6
