@@ -17,7 +17,7 @@ stuff"):
 | B1 | Make the repository a Zephyr module            | Partially done |
 | B2 | Pin Pigweed                                    | Done           |
 | B3 | Bring local workspace in line with manifest    | Done           |
-| B4 | Migrate boards to hardware model v2            | Partially done |
+| B4 | Migrate boards to hardware model v2            | Done           |
 | B5 | Consistent default boards                      | Open           |
 | D1 | Single definition of `custom_library()`        | Open           |
 | D2 | Shared Kconfig fragment                        | Open           |
@@ -93,7 +93,7 @@ which breaks Pigweed's protobuf code generation in `lock_test`. Reinstalling
 `docs/Developing.md` now covers this, plus how to update the workspace after a
 manifest bump. See also C6.
 
-### B4. Migrate boards to hardware model v2 — partially done
+### B4. Migrate boards to hardware model v2 — done
 
 Done upstream: `cordyceps`, `firefly_v1`, `lock_v01` and `power_meter` have
 `board.yml` and `Kconfig.<board>` and build on NCS 3.2.4.
@@ -101,10 +101,11 @@ Done upstream: `cordyceps`, `firefly_v1`, `lock_v01` and `power_meter` have
 The `locket` board, which was still in the legacy format and had no
 firmware using it, has been deleted.
 
-Remaining: the boards declare `vendor: arm` and live in `boards/arm/`. `arm` is
-the vendor prefix for Arm Ltd, not an architecture folder any more. Consider a
-custom vendor (e.g. `boards/ostranna/<board>/`, with a
-`dts/bindings/vendor-prefixes.txt` entry in the module).
+Left as is on purpose: the boards declare `vendor: arm` and live in
+`boards/arm/`. `arm` is the vendor prefix for Arm Ltd, so board listings
+attribute them to Arm, but it has no effect on builds. A custom vendor
+(e.g. `boards/ostranna/<board>/` with a `dts/bindings/vendor-prefixes.txt`
+entry in the module) would fix that if it ever matters.
 
 ### B5. Consistent default boards — open
 
@@ -183,6 +184,10 @@ images. Use a job matrix of `{app, board}` (build and store artifacts per
 matrix entry), or add `sample.yaml` / `testcase.yaml` to each app and run
 `west twister -T firmware`, which also gives a single local "build everything"
 command.
+
+For twister, every board needs a `<board>.yaml` with test metadata:
+`firefly_v1` and `lock_v01` have one, `cordyceps` and `power_meter` don't, and
+the existing two list an `xtools` toolchain that isn't used here.
 
 ### C3. Cache dependencies — open
 
