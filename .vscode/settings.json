@@ -8,7 +8,8 @@
     "${workspaceFolder}/firmware/smoke_test",
     "${workspaceFolder}/firmware/lock_test",
     "${workspaceFolder}/firmware/lock",
-    "${workspaceFolder}/firmware/power_meter"
+    "${workspaceFolder}/firmware/power_meter",
+    "${workspaceFolder}/firmware/rothult_cordyceps"
   ],
   "nrf-connect.toolchain.path": "PATH",
   "nrf-connect.west.env": {
