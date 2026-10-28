@@ -80,6 +80,17 @@ When sdk-nrf or Pigweed revision is bumped, bring the local workspace in line:
   the `protobuf` step).
 * `west zephyr-export`.
 
+# Repository as a Zephyr module
+
+The repository is a Zephyr module (see `manifest/zephyr/module.yml`), so any
+build in the west workspace automatically gets:
+* Custom boards from `boards/` (`west boards` lists them).
+* Shared code from `firmware/common` and `firmware/testing`. Its headers are
+  always on the include path; each library is enabled from the application's
+  `prj.conf` with a `CONFIG_FIREFLY_*` option (see `firmware/common/Kconfig`
+  and `firmware/testing/Kconfig`). There is no need to list them in the
+  application's `CMakeLists.txt`.
+
 # Flashing
 
 ## Black Magic Probe

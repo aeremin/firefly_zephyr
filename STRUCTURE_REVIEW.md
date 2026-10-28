@@ -14,14 +14,14 @@ stuff"):
 
 | ID | Item                                           | Status         |
 |----|------------------------------------------------|----------------|
-| B1 | Make the repository a Zephyr module            | Partially done |
+| B1 | Make the repository a Zephyr module            | Done           |
 | B2 | Pin Pigweed                                    | Done           |
 | B3 | Bring local workspace in line with manifest    | Done           |
 | B4 | Migrate boards to hardware model v2            | Done           |
 | B5 | Consistent default boards                      | Open           |
-| D1 | Single definition of `custom_library()`        | Open           |
+| D1 | Single definition of `custom_library()`        | Done           |
 | D2 | Shared Kconfig fragment                        | Open           |
-| D3 | Consistent library target names                | Open           |
+| D3 | Consistent library target names                | Done           |
 | L1 | Split `firmware/common` by purpose             | Open           |
 | L2 | Fix ODR violation in `eeprom.h`                | Open           |
 | L3 | Remove committed log files from `rpc/`         | Done           |
@@ -42,36 +42,31 @@ stuff"):
 | N2 | Refresh `README.md`                            | Open           |
 | N3 | Update `RELEASE.md`                            | Open           |
 
-Suggested starting point: **B1** (finish the Zephyr module, which also resolves
-D1 and D3) and **C1/C2** (fix the release step,
-deduplicate CI).
+Suggested next steps: **C1/C2** (fix the release step, deduplicate CI) and
+**L2** (ODR violation in `eeprom.h`).
 
 ## B. Build and dependency structure
 
-### B1. Make the repository a Zephyr module — partially done
+### B1. Make the repository a Zephyr module — done
 
-Done upstream: `manifest/zephyr/module.yml` declares the repository as a Zephyr
-module with `board_root: ..`, so west itself (and sysbuild, twister, IDEs) sees
-the custom boards. It lives in `manifest/` because that's the west manifest
-project path (`west init -l manifest`), and west only discovers modules at
-project roots.
+`manifest/zephyr/module.yml` declares the repository as a Zephyr module. It
+lives in `manifest/` because that's the west manifest project path
+(`west init -l manifest`), and west only discovers modules at project roots.
 
-Remaining:
+* `board_root: ..` (done upstream) makes the custom boards visible to west
+  itself (and sysbuild, twister, IDEs). The redundant
+  `list(APPEND BOARD_ROOT ...)` in `basics.cmake` is gone.
+* `cmake: ../firmware` / `kconfig: ../firmware/Kconfig` build
+  `firmware/common` and `firmware/testing` as Zephyr libraries
+  (`firefly_common`, `firefly_testing`). Apps enable each piece with a
+  `CONFIG_FIREFLY_*` option in `prj.conf`; each option `select`s the Pigweed
+  libraries it needs (symbol names checked against Pigweed `ccbb96c`).
+* App `CMakeLists.txt` files no longer `add_subdirectory(../common ...)` and
+  only list `main.cpp` plus Pigweed-specific targets
+  (`pw_unit_test.light`, RPC protos, ...).
 
-* `firmware/common/basics.cmake` still does
-  `list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)`, which is now
-  redundant with the module's `board_root`. Remove it.
-* Shared code is still pulled in by every app with
-  `add_subdirectory(../common common EXCLUDE_FROM_ALL)` and listed by hand in
-  `target_link_libraries`. Add `cmake:` / `kconfig:` entries to `module.yml`
-  pointing at `../firmware`, build `firmware/common` and `firmware/testing` as
-  Zephyr libraries, and let apps enable each piece with a
-  `CONFIG_FIREFLY_*` option in `prj.conf` (each option `select`s the Pigweed
-  libraries it needs). App `CMakeLists.txt` files then only list `main.cpp`
-  and Pigweed-specific targets (`pw_unit_test.light`, RPC protos, ...).
-* Pigweed's Kconfig symbols changed in the pinned revision
-  (e.g. `PIGWEED_ASSERT` → `PIGWEED_ASSERT_ZEPHYR`), so check the names of any
-  `PIGWEED_*` symbols selected from the new Kconfig against `ccbb96c`.
+All seven CI images build byte-identical to before (same FLASH/RAM, no symbol
+differences, same warnings).
 
 ### B2. Pin Pigweed — done
 
@@ -117,11 +112,11 @@ friendlier option).
 
 ## D. Duplication
 
-### D1. Single definition of `custom_library()` — open
+### D1. Single definition of `custom_library()` — done (via B1)
 
-The helper is copy-pasted in `firmware/common/CMakeLists.txt` and
-`firmware/testing/CMakeLists.txt`. Finishing B1 makes it unnecessary
-(plain `zephyr_library_*` calls); otherwise define it once in `basics.cmake`.
+The helper was copy-pasted in `firmware/common/CMakeLists.txt` and
+`firmware/testing/CMakeLists.txt`. B1 replaced it with plain
+`zephyr_library_*` calls.
 
 ### D2. Shared Kconfig fragment — open
 
@@ -130,11 +125,11 @@ shared fragment (e.g. `firmware/common/cpp.conf`) included with
 `list(APPEND EXTRA_CONF_FILE ...)` before `find_package(Zephyr)`, or have a
 module Kconfig option `select` those settings (with B1).
 
-### D3. Consistent library target names — open
+### D3. Consistent library target names — done (via B1)
 
-Some targets are `common.keyboard`, `common.nfc`; others are plain `timer`,
-`rgb_led`, `cc1101`. Finishing B1 reduces them to two libraries
-(`firefly_common`, `firefly_testing`) with `CONFIG_FIREFLY_*` options.
+Targets used to be a mix of `common.keyboard`, `common.nfc` and plain `timer`,
+`rgb_led`, `cc1101`. After B1 there are just two libraries,
+`firefly_common` and `firefly_testing`, with `CONFIG_FIREFLY_*` options.
 
 ## L. `firmware/common` layout
 

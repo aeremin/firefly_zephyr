@@ -1,0 +1,57 @@
+# Shared code used by the firmware images. Header-only helpers (eeprom.h,
+# persistent.h, sequences.h, ...) are always on the include path and have no
+# options here.
+
+config FIREFLY_BATTERY
+	bool "Battery level measurement"
+	depends on ADC && SOC_FAMILY_NORDIC_NRF
+
+config FIREFLY_BLUETOOTH
+	bool "BLE advertising and battery service helpers"
+	depends on BT
+
+config FIREFLY_BUZZER
+	bool "PWM buzzer"
+	depends on PWM
+	select FIREFLY_TIMER
+
+config FIREFLY_CC1101
+	bool "CC1101 radio driver"
+	depends on SPI
+
+config FIREFLY_COLOR
+	bool "Color helpers"
+
+config FIREFLY_KEYBOARD
+	bool "Matrix keyboard"
+	select FIREFLY_TIMER
+
+config FIREFLY_NFC
+	bool "MFRC522 NFC reader driver"
+	depends on SPI && ZEPHYR_PIGWEED_MODULE
+	select PIGWEED_BYTES
+	select PIGWEED_CONTAINERS
+	select PIGWEED_FUNCTION
+	select PIGWEED_SPAN
+
+config FIREFLY_RGB_LED
+	bool "PWM RGB LED"
+	depends on PWM
+	select FIREFLY_COLOR
+	select FIREFLY_TIMER
+
+config FIREFLY_ST25R3911B
+	bool "ST25R3911B NFC reader driver"
+	depends on SPI && ZEPHYR_PIGWEED_MODULE
+	select PIGWEED_BYTES
+	select PIGWEED_SPAN
+
+config FIREFLY_THREAD
+	bool "pw::Function-based thread helper"
+	depends on ZEPHYR_PIGWEED_MODULE
+	select PIGWEED_FUNCTION
+
+config FIREFLY_TIMER
+	bool "pw::Function-based timer"
+	depends on ZEPHYR_PIGWEED_MODULE
+	select PIGWEED_FUNCTION

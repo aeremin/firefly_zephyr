@@ -1,0 +1,8 @@
+# Entry point of the Zephyr module (see manifest/zephyr/module.yml).
+
+menu "Firefly"
+
+rsource "common/Kconfig"
+rsource "testing/Kconfig"
+
+endmenu

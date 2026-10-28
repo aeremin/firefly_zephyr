@@ -1,0 +1,5 @@
+# Helpers for the on-target test images.
+
+config FIREFLY_PRINTK_EVENT_HANDLER
+	bool "pw_unit_test event handler printing via printk"
+	depends on ZEPHYR_PIGWEED_MODULE

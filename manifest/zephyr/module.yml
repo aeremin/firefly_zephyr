@@ -1,6 +1,15 @@
+# Makes this repository a Zephyr module, so every build in the west workspace
+# (west build, sysbuild, twister, IDE integrations) picks up the custom boards
+# and the shared firmware code without any per-application setup.
+#
+# It lives in `manifest/` because that's the west manifest project path
+# (`west init -l manifest`), and west only discovers modules at project roots.
+# Hence all paths below are relative to `manifest/`.
 name: firefly_zephyr
 build:
+  cmake: ../firmware
+  kconfig: ../firmware/Kconfig
+  depends:
+    - pigweed
   settings:
     board_root: ..
-
-
