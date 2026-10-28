@@ -1,40 +1,60 @@
 # Firefly
-![](https://github.com/aeremin/firefly_zephyr/workflows/CI/badge.svg)
+[![CI](https://github.com/aeremin/firefly_zephyr/actions/workflows/ci.yml/badge.svg)](https://github.com/aeremin/firefly_zephyr/actions/workflows/ci.yml)
 
-# Software prerequisites
-* Zephyr RTOS 3.4.0. See [Getting Started](https://docs.zephyrproject.org/latest/getting_started/index.html).
-  When doing `west init`, use `west init zephyrproject --mr v3.4.0` to install this specific version.
-  Make sure you can build some of Zephyr examples before proceeding.
-* IDE: At the moment, Visual Studio Code with the bunch of plugins is used (VSCode will automatically ask to install them when
-  opening this repository. Other IDEs can be also potentially used, more investigation is needed. Most of the commands are run
-  from the command line anyway.
-* Linux or running via WSL under Windows is recommended, as Black Magic Probe programming [doesn't work on Windows](https://github.com/zephyrproject-rtos/zephyr/issues/50789)
-  When running under WSL, [usbipd](https://devblogs.microsoft.com/commandline/connecting-usb-devices-to-wsl/) can be used to allow interaction
-  with the hardware from WSL.
+Firmware (Zephyr RTOS / nRF Connect SDK, with [Pigweed](https://pigweed.dev/) libraries),
+custom boards and KiCad hardware projects for a few small nRF52-based devices.
 
-# Hardware prerequisites
-* For flashing, one of [nRF devkits](https://www.nordicsemi.com/Software-and-Tools/Development-Kits) is required.
+# Products
+
+| Product         | PCB (`hardware/`)  | Board (`boards/arm/`) | Firmware (`firmware/`)               |
+|-----------------|--------------------|-----------------------|--------------------------------------|
+| Firefly         | —                  | `firefly_v1`          | `firefly`, `activator`, `smoke_test` |
+| Lock            | `lock` (EasyEDA)   | `lock_v01`            | `lock`, `lock_test`                  |
+| Power meter     | `usb_power_meter`  | `power_meter`         | `power_meter`                        |
+| Cordyceps       | `cordyceps`        | `cordyceps`           | `rothult_cordyceps`                  |
+
+Other hardware projects without firmware in this repository: `blackmagic`,
+`esphome-nfc`, `hitl_rack`, `rothult`. Shared KiCad libraries are in `hardware/libs`.
+
+# Repository layout
+
+* `firmware/` — one folder per firmware image, plus shared code in `firmware/common`
+  and `firmware/testing`.
+* `boards/` — custom Zephyr board definitions.
+* `manifest/` — west manifest (nRF Connect SDK and Pigweed revisions). The repository
+  is also a Zephyr module (`manifest/zephyr/module.yml`), which makes the boards and
+  shared code available to every build.
+* `hardware/` — KiCad projects, with fabrication outputs in each project's `production/`.
+* `docs/` — development setup and notes.
 
 # Building and flashing
-To build of the images, mentioned below, use
+
+See [docs/Developing.md](docs/Developing.md) for the one-time setup (west workspace,
+Pigweed environment, Python dependencies).
+
+Then, from the repository root:
 ```bash
-west build <subfolder> --pristine
+west build firmware/<image> --board <board> --pristine
 ```
-(`--pristine` can be omitted if previous build used same subfolder, it basically means "clean, non-incremental build")
+(`--pristine` means "clean, non-incremental build" and can be omitted when rebuilding
+the same image).
 
 To flash it, use
 ```bash
 west flash
 ```
+Flashing with a Black Magic Probe is described in [docs/Developing.md](docs/Developing.md#black-magic-probe).
 
-# Contents
+CI builds all images on every push and runs `smoke_test` and `lock_test` on real
+hardware.
 
-This repo contains sources to build following firmware images:
+# Firmware images
 
-## Firefly
-This is the "main" image, located in the `firefly` folder.
+## Firefly (`firefly`, board `firefly_v1`)
+This is the "main" image.
 Behaviours:
-* Radio: will continously listen for the radio packets (see packet structure [here](common/magic_path_packet.h)).
+* Radio: will continously listen for the radio packets (see packet structure
+  [here](firmware/common/magic_path_packet.h)).
   This is compatible with Locket firmware from [this branch](https://github.com/aeremin/Locket_fw/tree/7Colors) and
   with the Activator firmware described below. LED color will change according to packets received.
 * Bluetooth: presents itself as connectable BLE device. Provides 2 BLE services:
@@ -45,27 +65,43 @@ Behaviours:
     * "Blink" (UUID `8ec87063-8865-4eca-82e0-2ea8e45e8221`). Write-only characteristic, writing anything will trigger short series
       of blinks.
 
-  Both of the services can be used by [dedicated Android app](https://install.appcenter.ms/users/a.eremin.msu/apps/ostranna-configurator/distribution_groups/public).
-  App sources are [here](https://github.com/aeremin/ostranna_configurator).
+  Both of the services can be used by the [Ostranna configurator](https://github.com/aeremin/ostranna_configurator) Android app.
 * Battery measurement. Will continously monitor battery voltage and
   * Report it via bluetooth - see above.
   * Will disable radio and LED (will keep Bluetooth enabled) if battery level is low.
 
-## Activator
+## Activator (`activator`, board `firefly_v1`)
 This image can be used to trigger Firefly one or to provide some settings for it.
 Behaviours:
-* Radio: will continously transmit radio packets (see packet structure [here](common/magic_path_packet.h)).
+* Radio: will continously transmit radio packets (see packet structure
+  [here](firmware/common/magic_path_packet.h)).
 * LED: will have a color corresponding to foreground color of packet being transmitted.
 * Bluetooth: presents itself as connectable BLE device. Provides 2 BLE services:
   * Standard battery service, containing battery level (0-100) characteristic.
   * Custom service (UUID `8ec87060-8865-4eca-82e0-2ea8e45e8221`) exposing readable and writable characteristics corresponding to the
     fields of radio packet being transmitted. This allows to control the packet from e.g. phone.
 
-  Both of the services can be used by [dedicated Android app](https://install.appcenter.ms/users/a.eremin.msu/apps/ostranna-configurator/distribution_groups/public).
-  App sources are [here](https://github.com/aeremin/ostranna_configurator).
+  Both of the services can be used by the [Ostranna configurator](https://github.com/aeremin/ostranna_configurator) Android app.
 
+## Lock (`lock`, board `lock_v01`)
+* Bluetooth: same custom service as Firefly, with "Beep" and "Blink" characteristics.
+* Reads NFC tag UIDs with an MFRC522 reader and logs them.
+* Handles a matrix keyboard, a reed switch and two buttons.
 
-## Smoke test
-This is a test image. Currently it only contains very basic test covering SPI usage and smooth LED transitions.
-Will output the test log to the UART/RTT.
+## Power meter (`power_meter`, board `power_meter`)
+* Measures voltage, current and power with an INA226 and logs them.
+* Bluetooth: custom service (UUID `a0c272ef-1280-4a64-8c5b-2833b948fc96`) with a
+  readable and writable "Power On" characteristic that switches the output.
 
+## Cordyceps (`rothult_cordyceps`, board `cordyceps`)
+* Bluetooth: custom service (UUID `ab12c725-0a0e-4c06-9968-2b9fff64b504`) with
+  * "Power On" characteristic (readable and writable) that switches the power output.
+  * "Lock is closed" characteristic (readable and writable). Writing it sends a
+    close/open command to the lock over UART.
+
+## Tests (`smoke_test`, `lock_test`)
+On-target test images (Pigweed `pw_unit_test`), run by CI on real hardware. They
+print the test log to the UART/RTT and end with "All tests passed!" on success.
+* `smoke_test` (board `firefly_v1`): CC1101 radio, RGB LED, timers.
+* `lock_test` (board `lock_v01`): RGB LED, timers, EEPROM, expansion headers, threads,
+  Pigweed RPC.

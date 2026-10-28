@@ -20,8 +20,7 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
-| N1 | Align product names across trees               | Open           |
-| N2 | Refresh `README.md`                            | Open           |
+| N1 | Align product names across trees               | Partially done |
 | N3 | Update `RELEASE.md`                            | Open           |
 
 Suggested next steps: **C1/C2** (fix the release step, deduplicate CI) and
@@ -133,7 +132,7 @@ Commit the library, or drop the table entry if those footprints aren't needed.
 
 ## N. Naming and docs
 
-### N1. Align product names across trees — open
+### N1. Align product names across trees — partially done
 
 The same product has different names in `hardware/`, `boards/` and
 `firmware/`, e.g.:
@@ -141,18 +140,9 @@ The same product has different names in `hardware/`, `boards/` and
 * `hardware/cordyceps` → `boards/arm/cordyceps` → `firmware/rothult_cordyceps`
 * `hardware/usb_power_meter` → `boards/arm/power_meter` → `firmware/power_meter`
 
-Either align the names or add a product table to the README mapping
-product → PCB → board → app → default board.
-
-### N2. Refresh `README.md` — open
-
-* Says Zephyr 3.4.0 and `west init --mr v3.4.0`, contradicting the
-  manifest-based flow in `docs/Developing.md` (the manifest uses NCS 3.2.4).
-* Links to `common/magic_path_packet.h`, which has moved to `firmware/common/`.
-* Doesn't mention lock, power_meter or cordyceps.
-
-Suggestion: trim the README to an overview + product table and point to
-`docs/Developing.md` for setup.
+The README now has a product table mapping product → PCB → board → firmware,
+so the names are discoverable. Remaining (optional): align the names
+themselves.
 
 ### N3. Update `RELEASE.md` — open
 
