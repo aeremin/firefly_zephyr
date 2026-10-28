@@ -201,9 +201,13 @@ per repository.
 
 Now the `build` job:
 
+* Takes only the sdk-nrf projects the images need (`name-allowlist` in
+  `manifest/west.yml`: 7 of ~50 imported projects; dropping the rest doesn't
+  change any image by a single byte).
 * Fetches west projects shallow (`west update --narrow -o=--depth=1`): only
-  the pinned revisions, no history. That's ~2.6 GB on disk, ~1.2 GB
-  compressed (measured in a dry run of the same command).
+  the pinned revisions, no history. Together with the allowlist that's
+  ~1.2 GB on disk, ~0.5 GB compressed (measured in a dry run of the same
+  command; without the allowlist it was 2.6 GB / 1.2 GB).
 * Caches `third_party/` without the Pigweed environment, keyed on
   `manifest/west.yml`; on a hit `west update` is skipped.
 * Caches `third_party/pigweed/environment` separately, keyed on

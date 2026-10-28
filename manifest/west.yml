@@ -11,6 +11,16 @@ manifest:
       path: nrf
       import:
         path-prefix: third_party
+        # Only what our images need: sdk-nrf brings in ~50 projects otherwise
+        # (Matter, LVGL, OpenThread, TF-M, ...).
+        name-allowlist:
+          - zephyr
+          - nrfxlib
+          - hal_nordic
+          - cmsis_6
+          - segger
+          - mbedtls
+          - oberon-psa-crypto
     - name: pigweed
       remote: pigweed
       revision: ccbb96c4dcd85e2b29576ab0bb678edd722e7664

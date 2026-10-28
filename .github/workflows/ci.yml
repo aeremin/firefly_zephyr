@@ -53,8 +53,6 @@ jobs:
         run: pip3 install -r ./third_party/zephyr/scripts/requirements.txt
       - name: Install NRF python dependencies to Pigweed's virtualenv
         run: pip3 install -r ./third_party/nrf/scripts/requirements.txt
-      - name: Install McuBoot python dependencies to Pigweed's virtualenv
-        run: pip3 install -r ./third_party/bootloader/mcuboot/scripts/requirements.txt
       - name: Activate Zephyr environment
         run: source third_party/zephyr/zephyr-env.sh
       - name: Validate Zephyr environment

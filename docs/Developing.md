@@ -30,11 +30,10 @@ together nicely:
   `third_party\pigweed\bootstrap.bat` depending on OS). This will install Pigweed toolchain
   (including python), initialize and populate python virtual environment, set up
   some environment variables.
-* Install Zephyr RTOS, nRF Connect SDK and MCUboot python dependencies (again, to the Pigweed's python's venv!):
+* Install Zephyr RTOS and nRF Connect SDK python dependencies (again, to the Pigweed's python's venv!):
   ```
   pip install -r third_party/zephyr/scripts/requirements.txt
   pip install -r third_party/nrf/scripts/requirements.txt
-  pip install -r third_party/bootloader/mcuboot/scripts/requirements.txt
   pip install "protobuf~=6.33.4"
   ```
   The last line is needed because nRF Connect SDK requirements downgrade `protobuf`
@@ -69,6 +68,11 @@ together nicely:
 When sdk-nrf or Pigweed revision is bumped, bring the local workspace in line:
 * `west update` (from the repository root). If it complains about local changes
   in some `third_party` project, stash or drop them first.
+* `manifest/west.yml` only takes the sdk-nrf projects listed in `name-allowlist`.
+  If a build needs another Zephyr module (e.g. MCUboot, picolibc, littlefs),
+  add its project name there. `west update` doesn't delete projects that were
+  dropped from the manifest; their folders under `third_party` can be removed
+  by hand.
 * Re-bootstrap Pigweed (`source third_party/pigweed/bootstrap.sh` or
   `third_party\pigweed\bootstrap.bat`), as a new revision can bring a new toolchain
   and python version.
