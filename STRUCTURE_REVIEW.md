@@ -28,7 +28,7 @@ stuff"):
 | C1 | Fix the release step                           | Partially done |
 | C2 | Replace copy-pasted CI steps                   | Open (worse)   |
 | C3 | Cache dependencies                             | Done           |
-| C4 | Update actions                                 | Partially done |
+| C4 | Update actions                                 | Done           |
 | C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open (new)     |
 | T1 | Host-side unit tests                           | Open           |
@@ -222,10 +222,20 @@ roughly two generations; GitHub evicts the least recently used entries.
 
 Not cached: APT packages (~35 s) and pip installs (~30 s).
 
-### C4. Update actions — partially done
+### C4. Update actions — done
 
-`upload-artifact` and `download-artifact` were bumped (v7/v8). All three jobs
-still use `actions/checkout@v1`; move to `@v4` or later.
+`upload-artifact` and `download-artifact` were bumped upstream (v7/v8). Now
+all three jobs use `actions/checkout@v7` and the caches use `actions/cache@v6`
+(v4 ran on Node 20, which GitHub is phasing out).
+
+`checkout@v1` had been kept because later versions didn't work on the
+self-hosted Raspberry Pi runner. `@v1` was built into the runner, while `@v2`
+and later are Node actions. The Pi now runs `download-artifact@v8` in the
+`hardware_test` job, which uses the same Node 24 runtime as `checkout@v7`, so
+Node actions work there now.
+
+Note: `hardware_test` and `store_artifacts` only use downloaded artifacts and
+remote actions, not repository files, so they may not need a checkout at all.
 
 ### C5. Deduplicate the hardware test job — open
 

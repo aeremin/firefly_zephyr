@@ -14,7 +14,7 @@ jobs:
       ZEPHYR_TOOLCHAIN_VARIANT: gnuarmemb
       GNUARMEMB_TOOLCHAIN_PATH: /home/runner/work/firefly_zephyr/firefly_zephyr/third_party/pigweed/environment/cipd/packages/arm
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v7
       - name: Install dependencies via APT
         run: sudo apt-get update && sudo apt-get install --no-install-recommends gperf dfu-util device-tree-compiler wget xz-utils file libsdl2-dev
       - name: Install West globally
@@ -25,7 +25,7 @@ jobs:
       # manifest: any revision bump there makes a fresh download.
       - name: Restore west projects from cache
         id: west-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             third_party
@@ -39,7 +39,7 @@ jobs:
         run: west zephyr-export
       - name: Restore Pigweed environment from cache
         id: pigweed-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: third_party/pigweed/environment
           key: pigweed-env-${{ runner.os }}-${{ hashFiles('manifest/west.yml') }}
@@ -102,7 +102,7 @@ jobs:
     runs-on: self-hosted
     needs: [build]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: smoke_test_firefly.elf
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [build]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: lock_test.elf      
