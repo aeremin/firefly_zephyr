@@ -1,5 +1,6 @@
 board:
   name: power_meter
+  full_name: Power meter
   vendor: arm
   socs:
     - name: nrf52833

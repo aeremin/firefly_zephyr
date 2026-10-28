@@ -1,5 +1,6 @@
 board:
   name: cordyceps
+  full_name: Cordyceps
   vendor: arm
   socs:
     - name: nrf52833

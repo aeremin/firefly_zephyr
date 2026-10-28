@@ -1,5 +1,6 @@
 board:
   name: firefly_v1
+  full_name: Firefly v.1
   vendor: arm
   socs:
     - name: nrf52832
