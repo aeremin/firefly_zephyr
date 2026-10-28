@@ -24,7 +24,7 @@ stuff"):
 | D3 | Consistent library target names                | Open           |
 | L1 | Split `firmware/common` by purpose             | Open           |
 | L2 | Fix ODR violation in `eeprom.h`                | Open           |
-| L3 | Remove committed log files from `rpc/`         | Open           |
+| L3 | Remove committed log files from `rpc/`         | Done           |
 | C1 | Fix the release step                           | Partially done |
 | C2 | Replace copy-pasted CI steps                   | Open (worse)   |
 | C3 | Cache dependencies                             | Done           |
@@ -157,10 +157,11 @@ defines a non-`inline` global (`kEepromDevice`) and a non-`inline` function
 (`EnablePower`) in a header. As soon as two translation units in one image
 include it, linking fails. Mark them `inline` or move them into a `.cpp`.
 
-### L3. Remove committed log files from `firmware/common/rpc/` — open
+### L3. Remove committed log files from `firmware/common/rpc/` — done
 
-`pw_console-logs.txt` (38 KB) and the empty `pw_console-device-logs.txt` are
-console logs. Delete them and add the pattern to `.gitignore`.
+`pw_console-logs.txt` (38 KB) and the empty `pw_console-device-logs.txt` were
+`pw console` logs. They're deleted, and `.gitignore` now has
+`pw_console-*logs.txt`.
 
 ## C. CI (`.github/workflows/ci.yml`)
 

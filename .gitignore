@@ -14,3 +14,6 @@ __pycache__
 fp-info-cache
 
 node_modules/
+
+# Pigweed console (pw console) logs
+pw_console-*logs.txt
