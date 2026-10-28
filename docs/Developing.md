@@ -26,20 +26,26 @@ together nicely:
   This will create and populate `third_party` folder with all dependencies.
 * Do the next steps in the same console, as further step rely on environment
   variables set by earlier steps.
-* Bootstrap Pigweed environment (`source third_party/pigweed/bootstrap.sh` or
-  `third_party\pigweed\bootstrap.bat` depending on OS). This will install Pigweed toolchain
-  (including python), initialize and populate python virtual environment, set up
-  some environment variables.
+* Bootstrap Pigweed environment (`source pigweed_env/bootstrap.sh` or
+  `pigweed_env\bootstrap.bat` depending on OS, from the repository root). This will
+  install the toolchain and tools listed in `pigweed_env/tools.json` (ARM GCC, CMake,
+  Python 3.13, GN, Ninja, protoc) into `third_party/pigweed/environment`, initialize
+  and populate the python virtual environment, and set up some environment variables.
+  The bootstrap configuration is `pigweed_env/pigweed.json`; Pigweed's own default
+  would install much more (Bazel, Clang, Rust, ...) and an older Python than Zephyr
+  requires. The Python package file has to be called `msrv_python.json`, as Pigweed's
+  own GN build expects that name.
 * Install Zephyr RTOS and nRF Connect SDK python dependencies (again, to the Pigweed's python's venv!):
   ```
   pip install -r third_party/zephyr/scripts/requirements.txt
   pip install -r third_party/nrf/scripts/requirements.txt
-  pip install "protobuf~=6.33.4"
+  pip install -c third_party/pigweed/pw_env_setup/py/pw_env_setup/virtualenv_setup/constraint.list protobuf
   ```
-  The last line is needed because nRF Connect SDK requirements downgrade `protobuf`
-  to 4.x, which breaks Pigweed's protobuf code generation (`lock_test` fails with
-  `cannot import name 'runtime_version' from 'google.protobuf'`). Use the version
-  Pigweed declares (`pip show pigweed` lists it under "Requires").
+  The last line is needed because nRF Connect SDK requirements downgrade `protobuf`,
+  which breaks Pigweed's protobuf code generation in `lock_test` (errors like
+  `cannot import name 'runtime_version' from 'google.protobuf'` or
+  `Detected incompatible Protobuf Gencode/Runtime versions`). It reinstalls the
+  version pinned in Pigweed's constraints, so it stays correct after Pigweed bumps.
 * Start VS Code (from the same console!): `"C:\Program Files\Microsoft VS Code\Code.exe" .` (or just `code .` if you have it in PATH).
 * Add the following to your VS Code `settings.json`
   (Global one, not the one in repo):
@@ -59,8 +65,8 @@ together nicely:
 
 * Do the next stays in the same console, as further step rely on environment
   variables set by earlier steps.
-* Activate Pigweed environment (`source third_party/pigweed/activate.sh` or
-  `third_party\pigweed\activate.bat` depending on OS).
+* Activate Pigweed environment (`source pigweed_env/activate.sh` or
+  `pigweed_env\activate.bat` depending on OS, from the repository root).
 * Start VS Code (from the same console!): `"C:\Program Files\Microsoft VS Code\Code.exe" .` (or just `code .` if you have it in PATH).
 
 ## After `manifest/west.yml` changes
@@ -73,9 +79,12 @@ When sdk-nrf or Pigweed revision is bumped, bring the local workspace in line:
   add its project name there. `west update` doesn't delete projects that were
   dropped from the manifest; their folders under `third_party` can be removed
   by hand.
-* Re-bootstrap Pigweed (`source third_party/pigweed/bootstrap.sh` or
-  `third_party\pigweed\bootstrap.bat`), as a new revision can bring a new toolchain
-  and python version.
+* Re-bootstrap Pigweed (`source pigweed_env/bootstrap.sh` or
+  `pigweed_env\bootstrap.bat`), as a new
+  revision can bring a new toolchain and python version. When bumping Pigweed, also
+  check that the GN / Ninja / protoc versions in `pigweed_env/tools.json` still match
+  the ones in `third_party/pigweed/pw_env_setup/py/pw_env_setup/cipd_setup/pigweed.json`,
+  and that Zephyr's minimum Python version is still met (`pigweed_env/msrv_python.json`).
 * Re-install python dependencies, same as during the first time set up (including
   the `protobuf` step).
 * `west zephyr-export`.

@@ -23,5 +23,5 @@ manifest:
           - oberon-psa-crypto
     - name: pigweed
       remote: pigweed
-      revision: ccbb96c4dcd85e2b29576ab0bb678edd722e7664
+      revision: 909513ecf3ab9cbb01160ef38d1649cde88dfb91
       path: third_party/pigweed

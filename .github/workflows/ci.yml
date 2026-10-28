@@ -41,31 +41,35 @@ jobs:
         run: west update --narrow -o=--depth=1
       - name: Export Zephyr CMake package
         run: west zephyr-export
-      # The Pigweed environment is cached, keyed on the manifest (which pins the
-      # Pigweed revision): restoring it is much faster than a bootstrap.
+      # The Pigweed environment (configured in pigweed_env/) is cached, keyed on the
+      # manifest (which pins Pigweed, Zephyr and the NCS Python requirements) and the
+      # environment config: restoring it is much faster than a bootstrap.
       - name: Restore Pigweed environment from cache
         id: pigweed-cache
         uses: actions/cache@v6
         with:
           path: third_party/pigweed/environment
-          key: pigweed-env-${{ runner.os }}-${{ hashFiles('manifest/west.yml') }}
+          key: pigweed-project-env-${{ runner.os }}-${{ hashFiles('manifest/west.yml', 'pigweed_env/*.json') }}
           # Bootstrap on top of an older environment only downloads what changed.
-          restore-keys: pigweed-env-${{ runner.os }}-
+          restore-keys: pigweed-project-env-${{ runner.os }}-
       - name: Bootstrap Pigweed
-        # activate.sh (used by the build step) works directly on a restored environment.
+        # activate.sh (used by the steps below) works directly on a restored environment.
         if: steps.pigweed-cache.outputs.cache-hit != 'true'
-        run: source third_party/pigweed/bootstrap.sh
-      - name: Install Zephyr python dependencies to Pigweed's virtualenv
-        run: pip3 install -r ./third_party/zephyr/scripts/requirements.txt
-      - name: Install NRF python dependencies to Pigweed's virtualenv
-        run: pip3 install -r ./third_party/nrf/scripts/requirements.txt
-      - name: Activate Zephyr environment
-        run: source third_party/zephyr/zephyr-env.sh
+        run: source ./pigweed_env/bootstrap.sh
+      # Every step runs in a fresh shell, so the Python dependencies have to be installed
+      # in the same step that activates the environment, to end up in its virtualenv.
+      # The NCS requirements downgrade protobuf, which breaks Pigweed's protobuf codegen.
+      - name: Install Zephyr and NCS python dependencies to Pigweed's virtualenv
+        run: >-
+          source ./pigweed_env/activate.sh &&
+          pip install -r ./third_party/zephyr/scripts/requirements.txt &&
+          pip install -r ./third_party/nrf/scripts/requirements.txt &&
+          pip install -c ./third_party/pigweed/pw_env_setup/py/pw_env_setup/virtualenv_setup/constraint.list protobuf
       - name: Validate Zephyr environment
         run: west manifest --validate
       - name: Build ${{ matrix.app }} for ${{ matrix.board }}
         run: >-
-          source ./third_party/pigweed/activate.sh &&
+          source ./pigweed_env/activate.sh &&
           west build firmware/${{ matrix.app }} --pristine --board ${{ matrix.board }} &&
           mv ./build/${{ matrix.app }}/zephyr/zephyr.elf ${{ matrix.image }}.elf
       - uses: actions/upload-artifact@v7

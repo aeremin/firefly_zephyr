@@ -11,17 +11,45 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | ID | Item                                           | Status         |
 |----|------------------------------------------------|----------------|
 | B5 | Consistent default boards                      | Open           |
+| B6 | Bump NCS to 3.4 (blocked on Pigweed)           | Blocked        |
 | D2 | Shared Kconfig fragment                        | Open           |
 | L1 | Split `firmware/common` by purpose             | Open           |
-| C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Partially done |
 
-Suggested next step: **C6** (CI and local builds use different Python
-environments).
+Suggested next step: **B6** once Pigweed fixes its Zephyr 4.4 integration.
 
 ## B. Build and dependency structure
+
+### B6. Bump NCS to 3.4 — blocked on Pigweed
+
+NCS v3.4.1 (LTS, Zephyr 4.4.2) needs Python 3.12+, which the project's
+Pigweed bootstrap config now provides (Python 3.13). With it, six of seven
+images build; `lock_test` doesn't. Already in place: `full_name` in every
+`board.yml`, and the Python / Pigweed setup. Also needed for 3.4, not applied
+yet because 3.2.6 doesn't need it: `lock_test/prj.conf` must stop enabling
+`CONFIG_PIGWEED_RPC_SERVER` (and enable `CONFIG_PIGWEED_SYNC_MUTEX` instead).
+That option links the `pw_rpc` libraries into `zephyr_interface`; as they depend
+on the `pw_log` backend, CMake reports a dependency cycle with Zephyr 4.4's
+generated headers. `lock_test` links the `pw_rpc` libraries in its
+`CMakeLists.txt` anyway.
+
+The blocker: Zephyr 4.4's `kernel.h` includes the generated
+`zephyr/heap_constants.h`. Pigweed libraries enabled with `CONFIG_PIGWEED_*`
+are linked into `zephyr_interface`, which the object library generating that
+header links too, so CMake always builds those Pigweed libraries before the
+header exists. Libraries that include `kernel.h` fail to compile: in
+`lock_test`, Pigweed's thread, sync and chrono backends. A file-level ordering
+dependency doesn't help (Ninja reports a cycle).
+
+Pigweed fixed the same problem for `pw_log_zephyr` / `pw_assert_zephyr` in
+[79c2915087](https://pigweed.googlesource.com/pigweed/pigweed/+/79c2915087b58c0d34f02df2ae4018d69add2b79)
+([review](https://pigweed-review.googlesource.com/c/pigweed/pigweed/+/462885)):
+only facades go into `zephyr_interface`, static backends are linked into the
+application with a dependency on the generated headers. `pw_thread_zephyr`,
+`pw_sync_zephyr` and `pw_chrono_zephyr` need the same treatment, upstream or
+as a workaround in this repository's module.
 
 ### B5. Consistent default boards — open
 
@@ -51,21 +79,6 @@ It is a flat mix of unrelated code. Suggested split:
 | `lib/`         | `timer`, `thread`, `scoped_mutex_lock.h`, `bitmap_enum.h`, `color`                                            |
 | `peripherals/` | `rgb_led`, `buzzer`, `keyboard`, `battery`, `sequences.h`                                                     |
 | `protocols/`   | `bluetooth`, `magic_path_packet.h`, `nfc*`, `rpc/` proto                                                      |
-
-## C. CI (`.github/workflows/ci.yml`)
-
-### C6. Make CI install Python deps like the local setup — open
-
-Each `run:` step in GitHub Actions is a fresh shell, so the environment from
-`source third_party/pigweed/bootstrap.sh` (and `zephyr-env.sh`) doesn't carry
-over to the following steps. The `pip3 install -r ...` steps therefore install
-the Zephyr / NCS requirements outside the Pigweed venv, unlike the documented
-local setup in `docs/Developing.md`. That's likely why CI doesn't hit the
-`protobuf` downgrade that breaks `lock_test` locally (the NCS requirements pin
-`protobuf` 4.x, Pigweed needs ~6.33), and it means CI and local builds use
-different Python environments. Run bootstrap/activate and the `pip install`
-steps in one step (or export the environment via `$GITHUB_ENV` /
-`$GITHUB_PATH`), and pin `protobuf` the same way as locally.
 
 ## T. Tests
 

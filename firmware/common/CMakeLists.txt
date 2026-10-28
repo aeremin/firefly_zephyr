@@ -15,3 +15,9 @@ zephyr_library_sources_ifdef(CONFIG_FIREFLY_RGB_LED rgb_led.cpp)
 zephyr_library_sources_ifdef(CONFIG_FIREFLY_ST25R3911B st25r3911b.cpp)
 zephyr_library_sources_ifdef(CONFIG_FIREFLY_THREAD thread.cpp)
 zephyr_library_sources_ifdef(CONFIG_FIREFLY_TIMER timer.cpp)
+
+# These use PW_LOG_*. Pigweed only adds the pw_log facade to zephyr_interface,
+# the backend has to be linked explicitly.
+if(CONFIG_FIREFLY_KEYBOARD OR CONFIG_FIREFLY_NFC OR CONFIG_FIREFLY_ST25R3911B)
+  zephyr_library_link_libraries(pw_log)
+endif()
