@@ -19,8 +19,8 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
-| H5 | Consolidate symbol libraries                   | Open           |
 | H6 | Merge the IDE launcher scripts                 | Open           |
+| H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Open           |
 | N2 | Refresh `README.md`                            | Open           |
 | N3 | Update `RELEASE.md`                            | Open           |
@@ -124,11 +124,6 @@ Put them under a top-level `tests/` folder, separate from on-target images.
 
 ## H. Repository hygiene
 
-### H5. Consolidate symbol libraries — open
-
-`hardware/Ostranna.kicad_sym` and `hardware/libs/Common.kicad_sym` live in
-different places; put both under `hardware/libs/`.
-
 ### H6. Merge the IDE launcher scripts — open
 
 `develop_in_clion.sh` and `develop_in_cursor.sh` duplicate the Pigweed
@@ -136,6 +131,14 @@ bootstrap and toolchain environment setup, and have already drifted
 (`ZEPHYR_BASE` is only set in the Cursor one). Move the shared part into one
 script (e.g. `scripts/env.sh`) that both source, or into a single script that
 takes the editor as an argument.
+
+### H7. Missing `Common.pretty` footprint library — open
+
+The `fp-lib-table` of `cordyceps` and `esphome-nfc` points at
+`hardware/libs/Common.pretty`, which isn't in the repository (and never was).
+The boards still open, since KiCad embeds footprints in the `.kicad_pcb`, but
+updating footprints from the library or reusing them in a new board won't work.
+Commit the library, or drop the table entry if those footprints aren't needed.
 
 ## N. Naming and docs
 

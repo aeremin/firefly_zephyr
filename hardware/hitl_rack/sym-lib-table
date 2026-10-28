@@ -1,4 +1,4 @@
 (sym_lib_table
   (version 7)
-  (lib (name "Ostranna")(type "KiCad")(uri "${KIPRJMOD}/../Ostranna.kicad_sym")(options "")(descr ""))
+  (lib (name "Ostranna")(type "KiCad")(uri "${KIPRJMOD}/../libs/Ostranna.kicad_sym")(options "")(descr ""))
 )
