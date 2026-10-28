@@ -19,7 +19,6 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
-| H6 | Merge the IDE launcher scripts                 | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Open           |
 | N2 | Refresh `README.md`                            | Open           |
@@ -123,14 +122,6 @@ steps in one step (or export the environment via `$GITHUB_ENV` /
 Put them under a top-level `tests/` folder, separate from on-target images.
 
 ## H. Repository hygiene
-
-### H6. Merge the IDE launcher scripts — open
-
-`develop_in_clion.sh` and `develop_in_cursor.sh` duplicate the Pigweed
-bootstrap and toolchain environment setup, and have already drifted
-(`ZEPHYR_BASE` is only set in the Cursor one). Move the shared part into one
-script (e.g. `scripts/env.sh`) that both source, or into a single script that
-takes the editor as an argument.
 
 ### H7. Missing `Common.pretty` footprint library — open
 
