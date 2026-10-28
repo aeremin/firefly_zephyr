@@ -14,6 +14,13 @@ PW_ENVIRONMENT_ROOT="$PW_ROOT/environment"
 export PW_ROOT
 export PW_PROJECT_ROOT
 export PW_ENVIRONMENT_ROOT
+# Don't run `pw doctor` on activation. It checks Pigweed's own development
+# setup: tools from its default package set that tools.json leaves out (e.g.
+# clang++ and openocd on Linux), and the `pw` command itself, which can't load
+# its plugins once the NCS requirements install setuptools >= 81 (no
+# pkg_resources). Builds don't use either, but a failed check makes activation
+# return non-zero, which fails CI steps.
+export PW_ACTIVATE_SKIP_CHECKS=1
 
 . "$PW_ROOT/pw_env_setup/util.sh"
 
