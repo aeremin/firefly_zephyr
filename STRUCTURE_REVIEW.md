@@ -4,85 +4,136 @@ Review of the repository layout, build setup, CI and docs, with suggested
 improvements. Items are grouped by area and roughly ordered by priority within
 each group; each has an ID (e.g. `B1`) so it can be referenced.
 
-Suggested starting point: **B1** (Zephyr module), **B2** (pin Pigweed) and
-**C1/C2** (fix CI release step, matrix build). Together they remove most of the
-CMake boilerplate, stop surprise nightly breakages and fix tagged releases.
+Status is relative to `origin/master` at `51d7885` ("Remove the voltcraft
+stuff"):
+
+* **Done** — fixed upstream, kept here for the record.
+* **Partially done** — some of it fixed upstream; the remaining part is
+  described.
+* **Open** — still valid as written.
+
+| ID | Item                                           | Status         |
+|----|------------------------------------------------|----------------|
+| B1 | Make the repository a Zephyr module            | Partially done |
+| B2 | Pin Pigweed                                    | Done           |
+| B3 | Bring local workspace in line with manifest    | Open           |
+| B4 | Migrate boards to hardware model v2            | Partially done |
+| B5 | Consistent default boards                      | Open           |
+| D1 | Single definition of `custom_library()`        | Open           |
+| D2 | Shared Kconfig fragment                        | Open           |
+| D3 | Consistent library target names                | Open           |
+| L1 | Split `firmware/common` by purpose             | Open           |
+| L2 | Fix ODR violation in `eeprom.h`                | Open           |
+| L3 | Remove committed log files from `rpc/`         | Open           |
+| C1 | Fix the release step                           | Partially done |
+| C2 | Replace copy-pasted CI steps                   | Open (worse)   |
+| C3 | Cache dependencies                             | Open           |
+| C4 | Update actions                                 | Partially done |
+| C5 | Deduplicate the hardware test job              | Open           |
+| T1 | Host-side unit tests                           | Open           |
+| H1 | Untrack files that shouldn't be in git         | Partially done |
+| H2 | Clean local leftovers                          | Open           |
+| H3 | Dead or incomplete entries                     | Open           |
+| H4 | Consistent policy for KiCad production outputs | Open           |
+| H5 | Consolidate symbol libraries                   | Open           |
+| H6 | Merge the IDE launcher scripts                 | Open (new)     |
+| N1 | Align product names across trees               | Open           |
+| N2 | Refresh `README.md`                            | Open           |
+| N3 | Update `RELEASE.md`                            | Open           |
+
+Suggested starting point: **B1** (finish the Zephyr module, which also resolves
+D1 and D3), **B4** (`locket` board) and **C1/C2** (fix the release step,
+deduplicate CI).
 
 ## B. Build and dependency structure
 
-### B1. Make the repository a Zephyr module
+### B1. Make the repository a Zephyr module — partially done
 
-Today `firmware/common/basics.cmake` sets `BOARD_ROOT` via a relative path and
-every app does `add_subdirectory(../common common EXCLUDE_FROM_ALL)`.
+Done upstream: `manifest/zephyr/module.yml` declares the repository as a Zephyr
+module with `board_root: ..`, so west itself (and sysbuild, twister, IDEs) sees
+the custom boards. It lives in `manifest/` because that's the west manifest
+project path (`west init -l manifest`), and west only discovers modules at
+project roots.
 
-Instead, add `zephyr/module.yml` at the repo root:
+Remaining:
 
-```yaml
-build:
-  cmake: firmware/common
-  kconfig: firmware/common/Kconfig
-  settings:
-    board_root: .
-    dts_root: .
-```
+* `firmware/common/basics.cmake` still does
+  `list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)`, which is now
+  redundant with the module's `board_root`. Remove it.
+* Shared code is still pulled in by every app with
+  `add_subdirectory(../common common EXCLUDE_FROM_ALL)` and listed by hand in
+  `target_link_libraries`. Add `cmake:` / `kconfig:` entries to `module.yml`
+  pointing at `../firmware`, build `firmware/common` and `firmware/testing` as
+  Zephyr libraries, and let apps enable each piece with a
+  `CONFIG_FIREFLY_*` option in `prj.conf` (each option `select`s the Pigweed
+  libraries it needs). App `CMakeLists.txt` files then only list `main.cpp`
+  and Pigweed-specific targets (`pw_unit_test.light`, RPC protos, ...).
+* Pigweed's Kconfig symbols changed in the pinned revision
+  (e.g. `PIGWEED_ASSERT` → `PIGWEED_ASSERT_ZEPHYR`), so check the names of any
+  `PIGWEED_*` symbols selected from the new Kconfig against `ccbb96c`.
 
-The manifest repository is part of the west workspace, so it will be picked up
-as a module automatically. Then:
+### B2. Pin Pigweed — done
 
-* Apps reduce to `find_package(Zephyr)` + `target_link_libraries(app ...)`.
-* Each common library gets a Kconfig switch (`CONFIG_FIREFLY_CC1101=y`, ...)
-  instead of being listed by hand in each app's `CMakeLists.txt`.
-* The `BOARD_ROOT` hack in `basics.cmake` goes away.
+`manifest/west.yml` now pins Pigweed to `ccbb96c` instead of `main`. Minor:
+prefer the full 40-character hash. A short hash only resolves if it's
+reachable from the refs west fetches, and is ambiguous in principle.
 
-### B2. Pin Pigweed
+### B3. Bring the local workspace in line with the manifest — open
 
-`manifest/west.yml` uses `revision: main` for Pigweed. Combined with the daily
-cron CI run, builds can break overnight with no change in this repo. Pin it to a
-specific commit hash and bump it deliberately.
+The manifest now requests sdk-nrf v3.2.4, but the local
+`third_party/zephyr/VERSION` still says 3.4.99 (NCS 2.5) and the local Pigweed
+checkout is from November 2023. Locally, `lock`, `lock_test` and `smoke_test`
+don't build (`zephyr/random/random.h` needs Zephyr ≥ 3.5), and the migrated
+boards (B4) can't work with the old Zephyr. Run `west update` and re-bootstrap
+Pigweed.
 
-### B3. Bring the local workspace in line with the manifest
+### B4. Migrate boards to hardware model v2 — partially done
 
-The manifest requests sdk-nrf v2.7.0 (Zephyr ~3.6), but the local
-`third_party/zephyr/VERSION` says 3.4.99 and the local Pigweed checkout is from
-November 2023. A `west update` is due and may surface breakage.
+Done upstream: `cordyceps`, `firefly_v1`, `lock_v01` and `power_meter` have
+`board.yml` and `Kconfig.<board>` and build on NCS 3.2.4.
 
-### B4. Migrate boards to hardware model v2
+Remaining:
 
-Boards use the legacy `boards/arm/<board>/` layout with `Kconfig.board`. Newer
-NCS/Zephyr versions use `boards/<vendor>/<board>/board.yml`, and the old layout
-is deprecated. Migrating all five boards together is cheap.
+* `locket` is still in the legacy format (`Kconfig.board`, no `board.yml`),
+  so the current Zephyr can't see it. Migrate or delete it (see also H3).
+* The boards declare `vendor: arm` and live in `boards/arm/`. `arm` is the
+  vendor prefix for Arm Ltd, not an architecture folder any more. Consider a
+  custom vendor (e.g. `boards/ostranna/<board>/`, with a
+  `dts/bindings/vendor-prefixes.txt` entry in the module).
 
-### B5. Consistent default boards
+### B5. Consistent default boards — open
 
 `firefly` and `activator` hardcode `set(BOARD firefly_v1)`; the other apps
-require `--board`. Pick one convention (a default per app is the friendlier
-option).
+require `--board`. CI now passes `--board` for every app, so the hardcoded
+defaults only matter locally. Pick one convention (a default per app is the
+friendlier option).
 
 ## D. Duplication
 
-### D1. Single definition of `custom_library()`
+### D1. Single definition of `custom_library()` — open
 
 The helper is copy-pasted in `firmware/common/CMakeLists.txt` and
-`firmware/testing/CMakeLists.txt`. Define it once (e.g. in `basics.cmake`), or
-make it unnecessary via B1.
+`firmware/testing/CMakeLists.txt`. Finishing B1 makes it unnecessary
+(plain `zephyr_library_*` calls); otherwise define it once in `basics.cmake`.
 
-### D2. Shared Kconfig fragment
+### D2. Shared Kconfig fragment — open
 
 Every `prj.conf` repeats the same C++ / newlib / debug block. Move it to a
 shared fragment (e.g. `firmware/common/cpp.conf`) included with
 `list(APPEND EXTRA_CONF_FILE ...)` before `find_package(Zephyr)`, or have a
 module Kconfig option `select` those settings (with B1).
 
-### D3. Consistent library target names
+### D3. Consistent library target names — open
 
 Some targets are `common.keyboard`, `common.nfc`; others are plain `timer`,
-`rgb_led`, `cc1101`. Pick one prefix.
+`rgb_led`, `cc1101`. Finishing B1 reduces them to two libraries
+(`firefly_common`, `firefly_testing`) with `CONFIG_FIREFLY_*` options.
 
 ## L. `firmware/common` layout
 
-### L1. Split `firmware/common` by purpose
+### L1. Split `firmware/common` by purpose — open
 
-It is currently a flat mix of unrelated code. Suggested split:
+It is a flat mix of unrelated code. Suggested split:
 
 | Folder         | Contents                                                                                                      |
 |----------------|---------------------------------------------------------------------------------------------------------------|
@@ -91,43 +142,54 @@ It is currently a flat mix of unrelated code. Suggested split:
 | `peripherals/` | `rgb_led`, `buzzer`, `keyboard`, `battery`, `sequences.h`                                                     |
 | `protocols/`   | `bluetooth`, `magic_path_packet.h`, `nfc*`, `rpc/` proto                                                      |
 
-### L2. Fix ODR violation in `eeprom.h`
+### L2. Fix ODR violation in `eeprom.h` — open
 
-`firmware/common/eeprom.h` defines a non-`inline` global (`kEepromDevice`) and
-non-`inline` functions (`EnablePower`) in a header. As soon as two translation
-units in one image include it, linking fails. Mark them `inline` or move them
-into a `.cpp`.
+Upstream changed the body of `EnablePower()` (now guarded by
+`DT_NODE_EXISTS(DT_ALIAS(eeprom_en))`), but `firmware/common/eeprom.h` still
+defines a non-`inline` global (`kEepromDevice`) and a non-`inline` function
+(`EnablePower`) in a header. As soon as two translation units in one image
+include it, linking fails. Mark them `inline` or move them into a `.cpp`.
 
-### L3. Remove committed log files from `firmware/common/rpc/`
+### L3. Remove committed log files from `firmware/common/rpc/` — open
 
 `pw_console-logs.txt` (38 KB) and the empty `pw_console-device-logs.txt` are
 console logs. Delete them and add the pattern to `.gitignore`.
 
 ## C. CI (`.github/workflows/ci.yml`)
 
-### C1. Fix the release step
+### C1. Fix the release step — partially done
 
-It publishes `firefly.hex, activator.hex, smoke_test.hex,
-smoke_test_firefly.hex`, but the build job only produces `.elf` files (plus
-`lock.hex`). Tagged releases currently publish nothing useful.
+Upstream switched everything to `.elf`, and the release step now lists
+`firefly.elf, activator.elf, smoke_test.elf, smoke_test_firefly.elf`.
+Remaining:
 
-### C2. Replace copy-pasted build steps
+* `smoke_test.elf` is never produced (the only smoke test artifact is
+  `smoke_test_firefly.elf`).
+* `lock.elf`, `lock_test.elf`, `power_meter.elf` and `rothult_cordyceps.elf`
+  are built but not attached to releases.
+* `RELEASE.md`, used as the release body, still describes flashing `.hex`
+  files (see N3).
 
-Seven near-identical build/upload steps. Use a job matrix of `{app, board}`, or
-better, add `sample.yaml` / `testcase.yaml` to each app and run
+### C2. Replace copy-pasted CI steps — open (worse)
+
+The `build` job has seven near-identical build/upload steps, and the new
+`store_artifacts` job repeats a download/upload pair for each of the same seven
+images. Use a job matrix of `{app, board}` (build and store artifacts per
+matrix entry), or add `sample.yaml` / `testcase.yaml` to each app and run
 `west twister -T firmware`, which also gives a single local "build everything"
 command.
 
-### C3. Cache dependencies
+### C3. Cache dependencies — open
 
 Every run does a full `west update` and Pigweed bootstrap. Cache `third_party/`
 and the Pigweed environment, keyed on `manifest/west.yml`.
 
-### C4. Update actions
+### C4. Update actions — partially done
 
-`actions/checkout@v1` is very old; move to `@v4`.
+`upload-artifact` and `download-artifact` were bumped (v7/v8). All three jobs
+still use `actions/checkout@v1`; move to `@v4` or later.
 
-### C5. Deduplicate the hardware test job
+### C5. Deduplicate the hardware test job — open
 
 Black Magic Probe serial paths are hardcoded twice. Move them into job `env`
 variables, or into a `scripts/flash_and_check.sh` usable both from CI and
@@ -135,7 +197,7 @@ locally.
 
 ## T. Tests
 
-### T1. Host-side unit tests
+### T1. Host-side unit tests — open
 
 `smoke_test` and `lock_test` only run on real hardware. Pure-logic code
 (`color`, `nfc_definitions`, `bitmap_enum`, `sequences`) could get host tests on
@@ -144,39 +206,51 @@ Put them under a top-level `tests/` folder, separate from on-target images.
 
 ## H. Repository hygiene
 
-### H1. Untrack files that shouldn't be in git
+### H1. Untrack files that shouldn't be in git — partially done
+
+`research/voltcraft/` (including its `.idea/`) was removed upstream.
+Still tracked:
 
 * `.vscode/.cortex-debug.*.state.json` (per-user debugger state)
-* `research/voltcraft/.idea/`
 * `hardware/libs/Common.bak`
 
-### H2. Clean local leftovers
+### H2. Clean local leftovers — open
 
-`firmware/microkeyboard/` contains only a `build/` directory;
-`firmware/smoke_test/build/` is stale.
+Not in git, but present in the working copy: `firmware/microkeyboard/`
+(contains only `build/`), and `firmware/smoke_test/build/` plus
+`firmware/smoke_test/cmake-build-debug/`.
 
-### H3. Dead or incomplete entries
+### H3. Dead or incomplete entries — open
 
-* The `locket` board isn't used by any app or CI job: delete it or add an app.
+* The `locket` board isn't used by any app or CI job, and wasn't migrated to
+  hardware model v2 (B4): delete it or migrate it and add an app.
 * `.vscode/settings.json` (`nrf-connect.applications`) lists six apps and is
   missing `rothult_cordyceps`.
 * `rothult_cordyceps` and `power_meter` don't use `common` at all. That's fine,
   but worth stating so it doesn't look like an omission.
 
-### H4. Consistent policy for KiCad production outputs
+### H4. Consistent policy for KiCad production outputs — open
 
-Most boards commit `production/`, while `hitl_rack` and `usb_power_meter`
-ignore it. Choose one policy (e.g. commit only for released revisions, or
-attach to GitHub releases).
+`blackmagic`, `cordyceps`, `esphome-nfc` and `rothult` commit `production/`,
+while `hitl_rack` and `usb_power_meter` ignore it. Choose one policy (e.g.
+commit only for released revisions, or attach to GitHub releases).
 
-### H5. Consolidate symbol libraries
+### H5. Consolidate symbol libraries — open
 
 `hardware/Ostranna.kicad_sym` and `hardware/libs/Common.kicad_sym` live in
 different places; put both under `hardware/libs/`.
 
+### H6. Merge the IDE launcher scripts — open (new)
+
+`develop_in_clion.sh` and the new `develop_in_cursor.sh` duplicate the Pigweed
+bootstrap and toolchain environment setup, and have already drifted
+(`ZEPHYR_BASE` is only set in the Cursor one). Move the shared part into one
+script (e.g. `scripts/env.sh`) that both source, or into a single script that
+takes the editor as an argument.
+
 ## N. Naming and docs
 
-### N1. Align product names across trees
+### N1. Align product names across trees — open
 
 The same product has different names in `hardware/`, `boards/` and
 `firmware/`, e.g.:
@@ -187,18 +261,19 @@ The same product has different names in `hardware/`, `boards/` and
 Either align the names or add a product table to the README mapping
 product → PCB → board → app → default board.
 
-### N2. Refresh `README.md`
+### N2. Refresh `README.md` — open
 
 * Says Zephyr 3.4.0 and `west init --mr v3.4.0`, contradicting the
-  manifest-based flow in `docs/Developing.md`.
+  manifest-based flow in `docs/Developing.md` (and the manifest now uses
+  NCS 3.2.4).
 * Links to `common/magic_path_packet.h`, which has moved to `firmware/common/`.
 * Doesn't mention lock, power_meter or cordyceps.
 
 Suggestion: trim the README to an overview + product table and point to
 `docs/Developing.md` for setup.
 
-### N3. Update `RELEASE.md`
+### N3. Update `RELEASE.md` — open
 
-Used as the GitHub release body. Describes flashing via nRF Programmer with
-pca10040/pca10056 devkits, which no longer matches the main workflow
-(Black Magic Probe / J-Link).
+Used as the GitHub release body. Describes flashing `.hex` files via nRF
+Programmer with pca10040/pca10056 devkits, while releases now ship `.elf` files
+and the main workflow is Black Magic Probe / J-Link.
