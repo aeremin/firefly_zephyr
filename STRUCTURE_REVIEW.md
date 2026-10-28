@@ -13,13 +13,13 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | B5 | Consistent default boards                      | Open           |
 | D2 | Shared Kconfig fragment                        | Open           |
 | L1 | Split `firmware/common` by purpose             | Open           |
-| C2 | Replace copy-pasted CI steps                   | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Partially done |
 
-Suggested next step: **C2** (deduplicate CI).
+Suggested next step: **C6** (CI and local builds use different Python
+environments).
 
 ## B. Build and dependency structure
 
@@ -53,19 +53,6 @@ It is a flat mix of unrelated code. Suggested split:
 | `protocols/`   | `bluetooth`, `magic_path_packet.h`, `nfc*`, `rpc/` proto                                                      |
 
 ## C. CI (`.github/workflows/ci.yml`)
-
-### C2. Replace copy-pasted CI steps — open
-
-The `build` job has seven near-identical build/upload steps, and the
-`store_artifacts` job repeats a download/upload pair for each of the same seven
-images. Use a job matrix of `{app, board}` (build and store artifacts per
-matrix entry), or add `sample.yaml` / `testcase.yaml` to each app and run
-`west twister -T firmware`, which also gives a single local "build everything"
-command.
-
-For twister, every board needs a `<board>.yaml` with test metadata:
-`firefly_v1` and `lock_v01` have one, `cordyceps` and `power_meter` don't, and
-the existing two list an `xtools` toolchain that isn't used here.
 
 ### C6. Make CI install Python deps like the local setup — open
 

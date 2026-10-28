@@ -9,6 +9,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    strategy:
+      # Build (and report) every image even if some of them fail.
+      fail-fast: false
+      matrix:
+        # `image` is the name of the resulting .elf file, the GitHub artifact and the Moma artifact.
+        include:
+          - { app: lock_test, board: lock_v01, image: lock_test }
+          - { app: lock, board: lock_v01, image: lock }
+          - { app: firefly, board: firefly_v1, image: firefly }
+          - { app: activator, board: firefly_v1, image: activator }
+          - { app: smoke_test, board: firefly_v1, image: smoke_test_firefly }
+          - { app: power_meter, board: power_meter, image: power_meter }
+          - { app: rothult_cordyceps, board: cordyceps, image: rothult_cordyceps }
+    name: build (${{ matrix.image }})
     env:
       ZEPHYR_BASE: /home/runner/work/firefly_zephyr/firefly_zephyr/third_party/zephyr
       ZEPHYR_TOOLCHAIN_VARIANT: gnuarmemb
@@ -38,7 +52,7 @@ jobs:
           # Bootstrap on top of an older environment only downloads what changed.
           restore-keys: pigweed-env-${{ runner.os }}-
       - name: Bootstrap Pigweed
-        # activate.sh (used by the build steps) works directly on a restored environment.
+        # activate.sh (used by the build step) works directly on a restored environment.
         if: steps.pigweed-cache.outputs.cache-hit != 'true'
         run: source third_party/pigweed/bootstrap.sh
       - name: Install Zephyr python dependencies to Pigweed's virtualenv
@@ -49,147 +63,64 @@ jobs:
         run: source third_party/zephyr/zephyr-env.sh
       - name: Validate Zephyr environment
         run: west manifest --validate
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/lock_test --pristine --board lock_v01 && mv ./build/lock_test/zephyr/zephyr.elf lock_test.elf
+      - name: Build ${{ matrix.app }} for ${{ matrix.board }}
+        run: >-
+          source ./third_party/pigweed/activate.sh &&
+          west build firmware/${{ matrix.app }} --pristine --board ${{ matrix.board }} &&
+          mv ./build/${{ matrix.app }}/zephyr/zephyr.elf ${{ matrix.image }}.elf
       - uses: actions/upload-artifact@v7
         with:
-          name: lock_test.elf
-          path: lock_test.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/lock --pristine --board lock_v01 && mv ./build/lock/zephyr/zephyr.elf lock.elf
-      - uses: actions/upload-artifact@v7
+          name: ${{ matrix.image }}.elf
+          path: ${{ matrix.image }}.elf
+      - name: Upload ${{ matrix.image }}.elf to Moma
+        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
         with:
-          name: lock.elf
-          path: lock.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/firefly --pristine --board firefly_v1&& mv ./build/firefly/zephyr/zephyr.elf firefly.elf
-      - uses: actions/upload-artifact@v7
-        with:
-          name: firefly.elf
-          path: firefly.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/activator --pristine --board firefly_v1 && mv ./build/activator/zephyr/zephyr.elf activator.elf
-      - uses: actions/upload-artifact@v7
-        with:
-          name: activator.elf
-          path: activator.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/smoke_test --pristine --board firefly_v1 && mv ./build/smoke_test/zephyr/zephyr.elf smoke_test_firefly.elf
-      - uses: actions/upload-artifact@v7
-        with:
-          name: smoke_test_firefly.elf
-          path: smoke_test_firefly.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/power_meter --pristine --board power_meter && mv ./build/power_meter/zephyr/zephyr.elf power_meter.elf
-      - uses: actions/upload-artifact@v7
-        with:
-          name: power_meter.elf
-          path: power_meter.elf
-      - run: source ./third_party/pigweed/activate.sh && west build firmware/rothult_cordyceps --pristine --board cordyceps && mv ./build/rothult_cordyceps/zephyr/zephyr.elf rothult_cordyceps.elf
-      - uses: actions/upload-artifact@v7
-        with:
-          name: rothult_cordyceps.elf
-          path: rothult_cordyceps.elf
-      - uses: ncipollo/release-action@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          artifacts: firefly.elf,activator.elf,smoke_test_firefly.elf,lock.elf,lock_test.elf,power_meter.elf,rothult_cordyceps.elf
-          bodyFile: RELEASE.md
-          token: ${{ secrets.GITHUB_TOKEN }}
+          userId: ${{ github.actor }}
+          artifactId: ${{ matrix.image }}
+          file: ${{ matrix.image }}.elf
+          commitHash: ${{ github.sha }}
   hardware_test:
     runs-on: self-hosted
     needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        # `probe` is the Black Magic Probe attached to the test board. It exposes the GDB
+        # server on interface 00 and the target's UART on interface 02.
+        include:
+          - image: smoke_test_firefly
+            probe: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034
+          - image: lock_test
+            probe: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233
+    name: hardware_test (${{ matrix.image }})
     env:
-      # Black Magic Probes attached to the test boards. Each one exposes the GDB
-      # server on interface 00 and the target's UART on interface 02.
-      FIREFLY_PROBE: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F401CC__v1.10.2-dirty_365938773034
-      LOCK_PROBE: /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe__BlackPill-F411CE__v1.10.2-dirty_3951376E3233
+      PROBE: ${{ matrix.probe }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          name: smoke_test_firefly.elf
-      - run: stty -F "$FIREFLY_PROBE-if02" 115200
-      - run: cat "$FIREFLY_PROBE-if02" > log.txt &
-      - run: gdb-multiarch -nx --batch -ex "target extended-remote $FIREFLY_PROBE-if00" -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' smoke_test_firefly.elf
+          name: ${{ matrix.image }}.elf
+      - run: stty -F "$PROBE-if02" 115200
+      - run: cat "$PROBE-if02" > log.txt &
+      - run: gdb-multiarch -nx --batch -ex "target extended-remote $PROBE-if00" -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' ${{ matrix.image }}.elf
       - run: sleep 10
       - run: cat log.txt
       - run: cat log.txt | grep "All tests passed!"
-      - uses: actions/download-artifact@v8
-        with:
-          name: lock_test.elf
-      - run: stty -F "$LOCK_PROBE-if02" 115200
-      - run: cat "$LOCK_PROBE-if02" > log.txt &
-      - run: gdb-multiarch -nx --batch -ex "target extended-remote $LOCK_PROBE-if00" -ex 'monitor swdp_scan' -ex 'attach 1' -ex 'load' -ex 'compare-sections' -ex 'kill' lock_test.elf
-      - run: sleep 10
-      - run: cat log.txt
-      - run: cat log.txt | grep "All tests passed!"
-  store_artifacts:
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
     needs: [build]
+    permissions:
+      contents: write
     steps:
+      # For RELEASE.md, used as the release body.
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          name: lock_test.elf      
-      - name: Upload lock_test.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
+          pattern: '*.elf'
+          merge-multiple: true
+      - uses: ncipollo/release-action@v1
         with:
-          userId: ${{ github.actor }}
-          artifactId: lock_test
-          file: lock_test.elf
-          commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: lock.elf      
-      - name: Upload lock.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
-        with:
-          userId: ${{ github.actor }}
-          artifactId: lock
-          file: lock.elf
-          commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: firefly.elf      
-      - name: Upload firefly.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
-        with:
-          userId: ${{ github.actor }}
-          artifactId: firefly
-          file: firefly.elf
-          commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: activator.elf      
-      - name: Upload activator.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
-        with:
-          userId: ${{ github.actor }}
-          artifactId: activator
-          file: activator.elf
-          commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: smoke_test_firefly.elf   
-      - name: Upload smoke_test_firefly.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
-        with:
-          userId: ${{ github.actor }}
-          artifactId: smoke_test_firefly
-          file: smoke_test_firefly.elf
-          commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: power_meter.elf      
-      - name: Upload power_meter.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
-        with:
-          userId: ${{ github.actor }}
-          artifactId: power_meter
-          file: power_meter.elf
-          commitHash: ${{ github.sha }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: rothult_cordyceps.elf      
-      - name: Upload rothult_cordyceps.elf to Moma
-        uses: aeremin/moma/.github/actions/moma-upload@v0.0.2
-        with:
-          userId: ${{ github.actor }}
-          artifactId: rothult_cordyceps
-          file: rothult_cordyceps.elf
-          commitHash: ${{ github.sha }}
+          artifacts: '*.elf'
+          bodyFile: RELEASE.md
+          token: ${{ secrets.GITHUB_TOKEN }}
