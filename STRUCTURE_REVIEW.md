@@ -19,7 +19,6 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
-| H4 | Consistent policy for KiCad production outputs | Open           |
 | H5 | Consolidate symbol libraries                   | Open           |
 | H6 | Merge the IDE launcher scripts                 | Open           |
 | N1 | Align product names across trees               | Open           |
@@ -124,12 +123,6 @@ steps in one step (or export the environment via `$GITHUB_ENV` /
 Put them under a top-level `tests/` folder, separate from on-target images.
 
 ## H. Repository hygiene
-
-### H4. Consistent policy for KiCad production outputs — open
-
-`blackmagic`, `cordyceps`, `esphome-nfc` and `rothult` commit `production/`,
-while `hitl_rack` and `usb_power_meter` ignore it. Choose one policy (e.g.
-commit only for released revisions, or attach to GitHub releases).
 
 ### H5. Consolidate symbol libraries — open
 
