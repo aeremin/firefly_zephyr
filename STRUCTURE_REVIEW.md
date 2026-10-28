@@ -13,15 +13,13 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | B5 | Consistent default boards                      | Open           |
 | D2 | Shared Kconfig fragment                        | Open           |
 | L1 | Split `firmware/common` by purpose             | Open           |
-| L2 | Fix ODR violation in `eeprom.h`                | Open           |
 | C2 | Replace copy-pasted CI steps                   | Open           |
 | C6 | Make CI install Python deps like local setup   | Open           |
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Partially done |
 
-Suggested next steps: **C2** (deduplicate CI) and **L2** (ODR violation in
-`eeprom.h`).
+Suggested next step: **C2** (deduplicate CI).
 
 ## B. Build and dependency structure
 
@@ -53,13 +51,6 @@ It is a flat mix of unrelated code. Suggested split:
 | `lib/`         | `timer`, `thread`, `scoped_mutex_lock.h`, `bitmap_enum.h`, `color`                                            |
 | `peripherals/` | `rgb_led`, `buzzer`, `keyboard`, `battery`, `sequences.h`                                                     |
 | `protocols/`   | `bluetooth`, `magic_path_packet.h`, `nfc*`, `rpc/` proto                                                      |
-
-### L2. Fix ODR violation in `eeprom.h` — open
-
-`firmware/common/eeprom.h` defines a non-`inline` global (`kEepromDevice`) and
-a non-`inline` function (`EnablePower`) in a header. As soon as two
-translation units in one image include it, linking fails. Mark them `inline`
-or move them into a `.cpp`.
 
 ## C. CI (`.github/workflows/ci.yml`)
 
