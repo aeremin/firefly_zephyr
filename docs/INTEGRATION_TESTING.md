@@ -36,6 +36,25 @@ Options:
   probe variable set (CI uses this, so a missing board can't go unnoticed).
 * `--gdb`: GDB executable used to flash (default `gdb-multiarch`).
 
+### Runner setup
+
+One-time setup of the Raspberry Pi running the self-hosted CI runner:
+
+* `gdb-multiarch` and `python3-venv` installed.
+* The runner's user can access the probes' serial ports (`dialout` group) and
+  BlueZ (`bluetooth` group): `sudo usermod -aG dialout,bluetooth <runner user>`,
+  then restart the runner service.
+* Bluetooth not blocked and powered on at boot:
+  * `rfkill list bluetooth` shows `Soft blocked: no`; otherwise
+    `sudo rfkill unblock bluetooth` (on Raspberry Pi OS, setting the Wi-Fi
+    country with `raspi-config` also lifts the block).
+  * `AutoEnable=true` in the `[Policy]` section of `/etc/bluetooth/main.conf`,
+    then `sudo systemctl restart bluetooth`.
+  * `bluetoothctl show` reports `Powered: yes`.
+
+The `hardware_test` job also runs `bluetoothctl power on` before the tests and
+prints the adapter state, so a powered-off adapter is visible in the log.
+
 ### What it does
 
 Hardware tests are a pytest suite running on the Pi. For each board it:

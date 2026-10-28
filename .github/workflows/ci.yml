@@ -101,6 +101,15 @@ jobs:
           merge-multiple: true
       - name: Install test dependencies
         run: python3 -m venv .venv && .venv/bin/pip install -r tests/hil/requirements.txt
+      - name: Power on Bluetooth
+        # The adapter may come up powered off (e.g. after a reboot). Fails with the
+        # adapter state in the log if it can't be powered on, e.g. when it's blocked
+        # by rfkill (see docs/INTEGRATION_TESTING.md for the runner setup).
+        run: |
+          rfkill list bluetooth || true
+          bluetoothctl power on | tee power.log || true
+          bluetoothctl show
+          grep -q "succeeded" power.log
       - name: Run hardware-in-the-loop tests
         # --ble uses the runner's (Raspberry Pi 3) onboard Bluetooth adapter through BlueZ.
         run: .venv/bin/pytest tests/hil --elf-dir elf --require-all-boards --ble -v -rs --junitxml=hil-report.xml
