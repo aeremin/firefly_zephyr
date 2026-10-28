@@ -19,9 +19,35 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --no-install-recommends gperf dfu-util device-tree-compiler wget xz-utils file libsdl2-dev
       - name: Install West globally
         run: pip3 install west
+      - name: Initialize west workspace
+        run: west init -l manifest
+      # Dependencies (west projects and Pigweed environment) are cached, keyed on the
+      # manifest: any revision bump there makes a fresh download.
+      - name: Restore west projects from cache
+        id: west-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            third_party
+            !third_party/pigweed/environment
+          key: west-projects-${{ runner.os }}-${{ hashFiles('manifest/west.yml') }}
       - name: Download dependencies (including Zephyr RTOS, Pigweed and nRF Connect SDK)
-        run: west init -l manifest && west update && west zephyr-export
-      - name: Bootstrap and activate Pigweed
+        if: steps.west-cache.outputs.cache-hit != 'true'
+        # Only the pinned revisions without history: makes both download and cache much smaller.
+        run: west update --narrow -o=--depth=1
+      - name: Export Zephyr CMake package
+        run: west zephyr-export
+      - name: Restore Pigweed environment from cache
+        id: pigweed-cache
+        uses: actions/cache@v4
+        with:
+          path: third_party/pigweed/environment
+          key: pigweed-env-${{ runner.os }}-${{ hashFiles('manifest/west.yml') }}
+          # Bootstrap on top of an older environment only downloads what changed.
+          restore-keys: pigweed-env-${{ runner.os }}-
+      - name: Bootstrap Pigweed
+        # activate.sh (used by the build steps) works directly on a restored environment.
+        if: steps.pigweed-cache.outputs.cache-hit != 'true'
         run: source third_party/pigweed/bootstrap.sh
       - name: Install Zephyr python dependencies to Pigweed's virtualenv
         run: pip3 install -r ./third_party/zephyr/scripts/requirements.txt

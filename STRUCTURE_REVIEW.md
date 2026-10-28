@@ -27,7 +27,7 @@ stuff"):
 | L3 | Remove committed log files from `rpc/`         | Open           |
 | C1 | Fix the release step                           | Partially done |
 | C2 | Replace copy-pasted CI steps                   | Open (worse)   |
-| C3 | Cache dependencies                             | Open           |
+| C3 | Cache dependencies                             | Done           |
 | C4 | Update actions                                 | Partially done |
 | C5 | Deduplicate the hardware test job              | Open           |
 | C6 | Make CI install Python deps like local setup   | Open (new)     |
@@ -75,9 +75,10 @@ Remaining:
 
 ### B2. Pin Pigweed — done
 
-`manifest/west.yml` now pins Pigweed to `ccbb96c` instead of `main`. Minor:
-prefer the full 40-character hash. A short hash only resolves if it's
-reachable from the refs west fetches, and is ambiguous in principle.
+`manifest/west.yml` pins Pigweed instead of following `main`, now with the
+full 40-character hash (`ccbb96c4dcd8...`). The short hash used before only
+resolved because west fetched all branches; it can't be fetched directly,
+which shallow updates (C3) need.
 
 ### B3. Bring the local workspace in line with the manifest — done
 
@@ -189,10 +190,32 @@ For twister, every board needs a `<board>.yaml` with test metadata:
 `firefly_v1` and `lock_v01` have one, `cordyceps` and `power_meter` don't, and
 the existing two list an `xtools` toolchain that isn't used here.
 
-### C3. Cache dependencies — open
+### C3. Cache dependencies — done
 
-Every run does a full `west update` and Pigweed bootstrap. Cache `third_party/`
-and the Pigweed environment, keyed on `manifest/west.yml`.
+Every run used to spend ~230 s on `west update` and ~200 s on the Pigweed
+bootstrap, out of ~12.5 min for the `build` job. Caching everything as is
+wasn't an option: the active west projects with full history are ~6.5 GB and
+the Pigweed environment several GB more, against GitHub's 10 GB cache limit
+per repository.
+
+Now the `build` job:
+
+* Fetches west projects shallow (`west update --narrow -o=--depth=1`): only
+  the pinned revisions, no history. That's ~2.6 GB on disk, ~1.2 GB
+  compressed (measured in a dry run of the same command).
+* Caches `third_party/` without the Pigweed environment, keyed on
+  `manifest/west.yml`; on a hit `west update` is skipped.
+* Caches `third_party/pigweed/environment` separately, keyed on
+  `manifest/west.yml` with a fallback to the newest older environment; on an
+  exact hit the bootstrap is skipped (`activate.sh` used by the build steps
+  works on a restored environment), otherwise bootstrap only downloads what
+  changed.
+
+Any revision bump in the manifest invalidates both caches. The Pigweed
+environment is the bigger of the two, so the 10 GB limit leaves room for
+roughly two generations; GitHub evicts the least recently used entries.
+
+Not cached: APT packages (~35 s) and pip installs (~30 s).
 
 ### C4. Update actions — partially done
 
