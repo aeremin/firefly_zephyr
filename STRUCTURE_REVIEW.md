@@ -21,7 +21,6 @@ done have been removed; IDs of the remaining ones are kept as they were.
 | T1 | Host-side unit tests                           | Open           |
 | H7 | Missing `Common.pretty` footprint library      | Open           |
 | N1 | Align product names across trees               | Partially done |
-| N3 | Update `RELEASE.md`                            | Open           |
 
 Suggested next steps: **C1/C2** (fix the release step, deduplicate CI) and
 **L2** (ODR violation in `eeprom.h`).
@@ -76,8 +75,6 @@ Remaining:
   `smoke_test_firefly.elf`).
 * `lock.elf`, `lock_test.elf`, `power_meter.elf` and `rothult_cordyceps.elf`
   are built but not attached to releases.
-* `RELEASE.md`, used as the release body, still describes flashing `.hex`
-  files (see N3).
 
 ### C2. Replace copy-pasted CI steps — open
 
@@ -143,9 +140,3 @@ The same product has different names in `hardware/`, `boards/` and
 The README now has a product table mapping product → PCB → board → firmware,
 so the names are discoverable. Remaining (optional): align the names
 themselves.
-
-### N3. Update `RELEASE.md` — open
-
-Used as the GitHub release body. Describes flashing `.hex` files via nRF
-Programmer with pca10040/pca10056 devkits, while releases now ship `.elf` files
-and the main workflow is Black Magic Probe / J-Link.
