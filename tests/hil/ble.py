@@ -12,8 +12,9 @@ BATTERY_LEVEL_UUID = '00002a19-0000-1000-8000-00805f9b34fb'
 BEEP_UUID = '8ec87062-8865-4eca-82e0-2ea8e45e8221'
 BLINK_UUID = '8ec87063-8865-4eca-82e0-2ea8e45e8221'
 
-# Same as smoke_test's "all tests passed" beep.
-BEEP_VOLUME = 100
+# The buzzer's PWM duty cycle, out of 255. Same as lock_test's beeps: quieter than smoke_test's
+# 100, to draw less current (at 100 the rack's firefly board reset from a brownout).
+BEEP_VOLUME = 30
 
 SCAN_TIMEOUT_S = 20.0
 
