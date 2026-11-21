@@ -50,20 +50,22 @@ One-time setup of the Raspberry Pi running the self-hosted CI runner:
   later (Raspberry Pi OS Bookworm or later): older versions can leave a
   switched-off probe's device files around, or have the port switched on again
   a few seconds later.
-* The runner's user can switch the hub's ports without `sudo`: the rules from
-  uhubctl's README in `/etc/udev/rules.d/52-usb.rules`, for the hub's vendor ID
-  `05e3`:
+* The runner's user can switch the hub's ports without `sudo`, but not the
+  Pi's own (on the Pi 3B+ they are switched together, Ethernet included): the
+  rules from uhubctl's README, limited to the hub's vendor ID `05e3`, in
+  `/etc/udev/rules.d/52-usb.rules`:
 
   ```
   SUBSYSTEM=="usb", DRIVER=="hub|usb", MODE="0666", ATTR{idVendor}=="05e3"
-  # Linux 6.0 or later (its ok to have this block present for older Linux kernels):
-  SUBSYSTEM=="usb", DRIVER=="hub|usb", \
+  # Linux 6.0 or later:
+  SUBSYSTEM=="usb", DRIVER=="hub", ATTRS{idVendor}=="05e3", \
     RUN="/bin/sh -c \"chmod -f 666 $sys$devpath/*port*/disable || true\""
   ```
 
   then `sudo udevadm trigger --attr-match=subsystem=usb`. `uhubctl` (without
-  `sudo`) lists the hub's two internal hubs (its 7 ports are two chained 4-port
-  hubs), each with `ppps` (per-port power switching).
+  `sudo`) lists the hub's two internal hubs, each with `ppps` (per-port power
+  switching): its 7 ports are two chained 4-port hubs, and port 4 of the first
+  one (e.g. `1-1.1.2`) leads to the second one (`1-1.1.2.4`).
 * The runner's user can access the probes' serial ports (`dialout` group) and
   BlueZ (`bluetooth` group): `sudo usermod -aG dialout,bluetooth <runner user>`,
   then restart the runner service.
