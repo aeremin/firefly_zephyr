@@ -36,6 +36,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help='fail instead of skipping tests for boards without a probe configured',
     )
     parser.addoption('--ble', action='store_true', help='run Bluetooth LE tests')
+    parser.addoption(
+        '--usb-hub',
+        metavar='VID:PID',
+        help='test the USB hub the probes are plugged into (switches their ports with uhubctl)',
+    )
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
