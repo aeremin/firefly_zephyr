@@ -112,7 +112,8 @@ jobs:
           grep -q "succeeded" power.log
       - name: Run hardware-in-the-loop tests
         # --ble uses the runner's (Raspberry Pi 3) onboard Bluetooth adapter through BlueZ.
-        run: .venv/bin/pytest tests/hil --elf-dir elf --require-all-boards --ble -v -rs --junitxml=hil-report.xml
+        # --usb-hub is the ID of the D-Link DUB-H7 (rev D) the probes are plugged into.
+        run: .venv/bin/pytest tests/hil --elf-dir elf --require-all-boards --ble --usb-hub 05e3:0608 -v -rs --junitxml=hil-report.xml
       - uses: actions/upload-artifact@v7
         if: always()
         with:
